@@ -15,32 +15,23 @@
  */
 package edu.amherst.acdc.trellis.service.webac;
 
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.FEDORA_EMBED_RESOURCES;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.LDP_CONTAINMENT;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
-import static edu.amherst.acdc.trellis.vocabulary.RDF.type;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toSet;
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.AccessControlService;
-import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Authorization;
+import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
-import org.apache.commons.rdf.api.BlankNodeOrIRI;
-import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.Triple;
 import org.apache.commons.rdf.api.Graph;
+import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.simple.SimpleRDF;
+import org.apache.commons.rdf.jena.JenaRDF;
 
 /**
  *
@@ -48,7 +39,7 @@ import org.apache.commons.rdf.simple.SimpleRDF;
  */
 public class WebACService implements AccessControlService {
 
-    private static final RDF rdf = new SimpleRDF();
+    private static final RDF rdf = new JenaRDF();
 
     private final ResourceService service;
 
@@ -114,22 +105,16 @@ public class WebACService implements AccessControlService {
     @Override
     public Stream<Authorization> getAuthorizations(final IRI identifier) {
         final Resource acl = service.find(session, identifier);
-        final List<Resource.TripleCategory> types = new ArrayList<>();
-        types.add(FEDORA_EMBED_RESOURCES);
-        types.add(USER_MANAGED);
-        types.add(LDP_CONTAINMENT);
-        final Graph graph = rdf.createGraph();
-        acl.stream(types).forEach(graph::add);
-
-        final Set<BlankNodeOrIRI> subjects = graph.stream(null, type, ACL.Authorization)
-            .map(Triple::getSubject)
-            .collect(toSet());
-
-        //return subjects.stream().map(subject -> {
-//            graph.stream(subject, ACL.mode, null).
-
-        //});
-
-        return Stream.empty();
+        return acl.getChildren().flatMap(uri -> {
+            final Resource auth = service.find(session, uri);
+            if (auth.getTypes().anyMatch(ACL.Authorization::equals)) {
+                final Graph graph = rdf.createGraph();
+                auth.stream(USER_MANAGED).filter(triple ->
+                        triple.getPredicate().getIRIString().startsWith(ACL.uri))
+                    .forEach(graph::add);
+                return Stream.of(new Authorization(uri, graph));
+            }
+            return Stream.empty();
+        });
     }
 }

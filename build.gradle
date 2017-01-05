@@ -29,8 +29,19 @@ ext {
     /* Dependencies */
     trellisApiVersion = '0.1.0-SNAPSHOT'
     trellisSpiVersion = '0.1.0-SNAPSHOT'
+    trellisVocabularyVersion = '0.1.0-SNAPSHOT'
     commonsRdfVersion = '0.3.0-incubating'
+
+    /* Testing */
     junitVersion = '4.12'
+    mockitoVersion = '1.10.19'
+
+    /* Transitive Dependencies */
+    jenaVersion = '3.1.1'
+    dexxVersion = '0.6'
+    commonsLangVersion = '3.4'
+    commonsCsvVersion = '1.4'
+    thriftVersion = '0.9.2'
 
     /* OSGi */
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
@@ -43,9 +54,12 @@ configurations {
 dependencies {
     compile group: 'edu.amherst.acdc', name: 'trellis-api', version: trellisApiVersion
     compile group: 'edu.amherst.acdc', name: 'trellis-spi', version: trellisSpiVersion
+    compile group: 'edu.amherst.acdc', name: 'trellis-vocabulary', version: trellisVocabularyVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
+    compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
+    testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
 
     buildToolsConfig 'edu.amherst.acdc:acrepo-build-tools:0.2.0'
 }
