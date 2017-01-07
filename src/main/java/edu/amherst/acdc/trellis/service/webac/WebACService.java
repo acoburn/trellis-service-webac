@@ -18,6 +18,7 @@ package edu.amherst.acdc.trellis.service.webac;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -32,12 +33,15 @@ import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
+import org.slf4j.Logger;
 
 /**
  *
  * @author acoburn
  */
 public class WebACService implements AccessControlService {
+
+    private static final Logger LOGGER = getLogger(WebACService.class);
 
     private static final RDF rdf = new JenaRDF();
 
@@ -79,6 +83,7 @@ public class WebACService implements AccessControlService {
         if (resource.isPresent()) {
             final Optional<IRI> acl = resource.get().getAccessControl();
             if (acl.isPresent()) {
+                LOGGER.debug("Found ACL resource: {}", acl.get().getIRIString());
                 return acl;
             }
 
