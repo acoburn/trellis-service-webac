@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.service.webac;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
@@ -47,6 +48,7 @@ public class WebACService implements AccessControlService {
      * @param service the resource service
      */
     public WebACService(final ResourceService service) {
+        requireNonNull(service, "A non-null ResourceService must be provided!");
         this.service = service;
     }
 
@@ -72,6 +74,7 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<IRI> findAclFor(final IRI identifier) {
+        requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = service.find(identifier);
         if (resource.isPresent()) {
             final Optional<IRI> acl = resource.get().getAccessControl();
@@ -89,6 +92,7 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
+        requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = service.find(identifier);
         if (resource.isPresent()) {
             if (resource.get().getAccessControl().isPresent()) {
@@ -106,6 +110,7 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Stream<Authorization> getAuthorizations(final IRI identifier) {
+        requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> acl = service.find(identifier);
         if (acl.isPresent()) {
             return acl.get().getChildren().parallel().unordered().flatMap(uri -> {
@@ -126,6 +131,9 @@ public class WebACService implements AccessControlService {
     }
 
     private Boolean canPerformOperation(final Session session, final IRI identifier, final IRI mode) {
+        requireNonNull(session, "A non-null session must be provided!");
+        requireNonNull(identifier, "A non-null identifier must be provided!");
+
         // TODO -- add some sort of admin short-circut
         //if (session.isAdmin()) {
             //return true;
