@@ -16,7 +16,6 @@
 package edu.amherst.acdc.trellis.service.webac;
 
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 
 import java.util.Optional;
@@ -43,16 +42,11 @@ public class WebACService implements AccessControlService {
 
     private final ResourceService service;
 
-    private final Session internalSession;
-
     /**
      * Create a WebAC service
-     * // TODO -- make the internal session internal -- not a constructor argument
-     * @param session an internal session
      * @param service the resource service
      */
-    public WebACService(final Session session, final ResourceService service) {
-        this.internalSession = session;
+    public WebACService(final ResourceService service) {
         this.service = service;
     }
 
@@ -72,31 +66,39 @@ public class WebACService implements AccessControlService {
     }
 
     @Override
+    public Boolean canAppend(final Session session, final IRI identifier) {
+        return canPerformOperation(session, identifier, ACL.Append);
+    }
+
+    @Override
     public Optional<IRI> findAclFor(final IRI identifier) {
-        final Resource resource = service.find(internalSession, identifier);
-        final Optional<IRI> acl = resource.getAccessControl();
-        if (acl.isPresent()) {
-            return acl;
-        }
+        final Optional<Resource> resource = service.find(identifier);
+        if (resource.isPresent()) {
+            final Optional<IRI> acl = resource.get().getAccessControl();
+            if (acl.isPresent()) {
+                return acl;
+            }
 
-        final Optional<IRI> parent = resource.getParent();
-        if (parent.isPresent()) {
-            return findAclFor(parent.get());
+            final Optional<IRI> parent = resource.get().getParent();
+            if (parent.isPresent()) {
+                return findAclFor(parent.get());
+            }
         }
-
         return empty();
     }
 
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
-        final Resource resource = service.find(internalSession, identifier);
-        if (resource.getAccessControl().isPresent()) {
-            return of(resource);
-        }
+        final Optional<Resource> resource = service.find(identifier);
+        if (resource.isPresent()) {
+            if (resource.get().getAccessControl().isPresent()) {
+                return resource;
+            }
 
-        final Optional<IRI> parent = resource.getParent();
-        if (parent.isPresent()) {
-            return findAncestorWithAccessControl(parent.get());
+            final Optional<IRI> parent = resource.get().getParent();
+            if (parent.isPresent()) {
+                return findAncestorWithAccessControl(parent.get());
+            }
         }
 
         return empty();
@@ -104,18 +106,23 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Stream<Authorization> getAuthorizations(final IRI identifier) {
-        final Resource acl = service.find(internalSession, identifier);
-        return acl.getChildren().parallel().unordered().flatMap(uri -> {
-            final Resource auth = service.find(internalSession, uri);
-            if (auth.getTypes().anyMatch(ACL.Authorization::equals)) {
-                final Graph graph = rdf.createGraph();
-                auth.stream(USER_MANAGED).filter(triple ->
-                        triple.getPredicate().getIRIString().startsWith(ACL.uri))
-                    .forEach(graph::add);
-                return Stream.of(new Authorization(uri, graph));
-            }
-            return Stream.empty();
-        });
+        final Optional<Resource> acl = service.find(identifier);
+        if (acl.isPresent()) {
+            return acl.get().getChildren().parallel().unordered().flatMap(uri -> {
+                final Optional<Resource> auth = service.find(uri);
+                if (auth.isPresent()) {
+                    if (auth.get().getTypes().anyMatch(ACL.Authorization::equals)) {
+                        final Graph graph = rdf.createGraph();
+                        auth.get().stream(USER_MANAGED).filter(triple ->
+                                triple.getPredicate().getIRIString().startsWith(ACL.uri))
+                            .forEach(graph::add);
+                        return Stream.of(new Authorization(uri, graph));
+                    }
+                }
+                return Stream.empty();
+            });
+        }
+        return Stream.empty();
     }
 
     private Boolean canPerformOperation(final Session session, final IRI identifier, final IRI mode) {
@@ -124,16 +131,20 @@ public class WebACService implements AccessControlService {
             //return true;
         //}
 
-        return getAllAuthorizationsFor(service.find(internalSession, identifier))
-                .filter(auth -> auth.getMode().contains(mode))
-                .anyMatch(auth -> {
-                    if (session.getDelegatedBy().isPresent() &&
-                            !auth.getAgent().contains(session.getDelegatedBy().get())) {
-                        return false;
-                    }
-                    return auth.getAgent().contains(session.getUser()) ||
-                            session.getGroups().stream().anyMatch(auth.getAgentGroup()::contains);
-                });
+        final Optional<Resource> resource = service.find(identifier);
+        if (resource.isPresent()) {
+            return getAllAuthorizationsFor(resource.get())
+                    .filter(auth -> auth.getMode().contains(mode))
+                    .anyMatch(auth -> {
+                        if (session.getDelegatedBy().isPresent() &&
+                                !auth.getAgent().contains(session.getDelegatedBy().get())) {
+                            return false;
+                        }
+                        return auth.getAgent().contains(session.getUser()) ||
+                                session.getGroups().stream().anyMatch(auth.getAgentGroup()::contains);
+                    });
+        }
+        return false;
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource) {
