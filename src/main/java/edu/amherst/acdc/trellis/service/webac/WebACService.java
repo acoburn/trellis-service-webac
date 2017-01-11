@@ -23,6 +23,7 @@ import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
@@ -46,6 +47,14 @@ public class WebACService implements AccessControlService {
     private static final Logger LOGGER = getLogger(WebACService.class);
 
     private static final RDF rdf = new JenaRDF();
+
+    private static Predicate<Resource> isAuthorization = resource ->
+        resource.getTypes().anyMatch(ACL.Authorization::equals);
+
+    private static Predicate<Authorization> hasAccess(final Resource resource) {
+        return authorization -> authorization.getAccessTo().contains(resource.getIdentifier()) ||
+                resource.getTypes().anyMatch(authorization.getAccessToClass()::contains);
+    }
 
     private final ResourceService service;
 
@@ -100,7 +109,7 @@ public class WebACService implements AccessControlService {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         return service.find(identifier).map(resource ->
             resource.getChildren().parallel().unordered().map(service::find).filter(Optional::isPresent)
-                .map(Optional::get).filter(res -> res.getTypes().anyMatch(ACL.Authorization::equals)).flatMap(auth -> {
+                .map(Optional::get).filter(isAuthorization).flatMap(auth -> {
                     final Graph graph = rdf.createGraph();
                     auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
                         .forEach(graph::add);
@@ -131,17 +140,11 @@ public class WebACService implements AccessControlService {
 
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource) {
         if (resource.getAccessControl().isPresent()) {
-            return getAuthorizations(resource.getAccessControl().get())
-                    .filter(auth -> auth.getAccessTo().contains(resource.getIdentifier()) ||
-                                resource.getTypes().anyMatch(auth.getAccessToClass()::contains));
-        } else if (resource.getParent().isPresent()) {
-            final Optional<Resource> ancestor = findAncestorWithAccessControl(resource.getParent().get());
-            if (ancestor.isPresent()) {
-                return getAuthorizations(ancestor.get().getAccessControl().get())
-                            .filter(auth -> auth.getAccessTo().contains(ancestor.get().getIdentifier()) ||
-                                    resource.getTypes().anyMatch(auth.getAccessToClass()::contains));
-            }
+            return getAuthorizations(resource.getAccessControl().get()).filter(hasAccess(resource));
         }
-        return empty();
+        return resource.getParent().flatMap(this::findAncestorWithAccessControl).map(ancestor ->
+            ancestor.getAccessControl().map(this::getAuthorizations).orElse(empty()).filter(hasAccess(ancestor)))
+                .orElse(empty());
     }
+
 }
