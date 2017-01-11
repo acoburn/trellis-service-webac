@@ -16,7 +16,9 @@
 package edu.amherst.acdc.trellis.service.webac;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -80,59 +82,30 @@ public class WebACService implements AccessControlService {
     public Optional<IRI> findAclFor(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = service.find(identifier);
-        if (resource.isPresent()) {
-            final Optional<IRI> acl = resource.get().getAccessControl();
-            if (acl.isPresent()) {
-                LOGGER.debug("Found ACL resource: {}", acl.get().getIRIString());
-                return acl;
-            }
-
-            final Optional<IRI> parent = resource.get().getParent();
-            if (parent.isPresent()) {
-                return findAclFor(parent.get());
-            }
-        }
-        return empty();
+        return ofNullable(resource.flatMap(Resource::getAccessControl)
+            .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAclFor).orElse(null)));
     }
 
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = service.find(identifier);
-        if (resource.isPresent()) {
-            if (resource.get().getAccessControl().isPresent()) {
-                return resource;
-            }
-
-            final Optional<IRI> parent = resource.get().getParent();
-            if (parent.isPresent()) {
-                return findAncestorWithAccessControl(parent.get());
-            }
-        }
-
-        return empty();
+        return ofNullable(resource.filter(res -> res.getAccessControl().isPresent())
+                .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAncestorWithAccessControl)
+                    .orElse(null)));
     }
 
     @Override
     public Stream<Authorization> getAuthorizations(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> acl = service.find(identifier);
-        if (acl.isPresent()) {
-            return acl.get().getChildren().parallel().unordered().flatMap(uri -> {
-                final Optional<Resource> auth = service.find(uri);
-                if (auth.isPresent()) {
-                    if (auth.get().getTypes().anyMatch(ACL.Authorization::equals)) {
-                        final Graph graph = rdf.createGraph();
-                        auth.get().stream(USER_MANAGED).filter(triple ->
-                                triple.getPredicate().getIRIString().startsWith(ACL.uri))
-                            .forEach(graph::add);
-                        return Stream.of(new Authorization(uri, graph));
-                    }
-                }
-                return Stream.empty();
-            });
-        }
-        return Stream.empty();
+        return service.find(identifier).map(resource ->
+            resource.getChildren().parallel().unordered().map(service::find).filter(Optional::isPresent)
+                .map(Optional::get).filter(res -> res.getTypes().anyMatch(ACL.Authorization::equals)).flatMap(auth -> {
+                    final Graph graph = rdf.createGraph();
+                    auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
+                        .forEach(graph::add);
+                    return of(new Authorization(auth.getIdentifier(), graph));
+                })).orElse(empty());
     }
 
     private Boolean canPerformOperation(final Session session, final IRI identifier, final IRI mode) {
@@ -144,9 +117,7 @@ public class WebACService implements AccessControlService {
             //return true;
         //}
 
-        final Optional<Resource> resource = service.find(identifier);
-        if (resource.isPresent()) {
-            return getAllAuthorizationsFor(resource.get())
+        return service.find(identifier).map(resource -> getAllAuthorizationsFor(resource)
                     .filter(auth -> auth.getMode().contains(mode))
                     .anyMatch(auth -> {
                         if (session.getDelegatedBy().isPresent() &&
@@ -155,9 +126,7 @@ public class WebACService implements AccessControlService {
                         }
                         return auth.getAgent().contains(session.getUser()) ||
                                 session.getGroups().stream().anyMatch(auth.getAgentGroup()::contains);
-                    });
-        }
-        return false;
+                    })).orElse(false);
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource) {
@@ -173,6 +142,6 @@ public class WebACService implements AccessControlService {
                                     resource.getTypes().anyMatch(auth.getAccessToClass()::contains));
             }
         }
-        return Stream.empty();
+        return empty();
     }
 }
