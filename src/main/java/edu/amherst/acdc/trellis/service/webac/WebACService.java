@@ -17,17 +17,20 @@ package edu.amherst.acdc.trellis.service.webac;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.AccessControlService;
+import edu.amherst.acdc.trellis.spi.AgentService;
 import edu.amherst.acdc.trellis.spi.Authorization;
 import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
@@ -58,13 +61,19 @@ public class WebACService implements AccessControlService {
 
     private final ResourceService service;
 
+    private final AgentService agentSvc;
+
     /**
      * Create a WebAC service
-     * @param service the resource service
+     * @param resourceService the resource service
+     * @param agentService the agent service
      */
-    public WebACService(final ResourceService service) {
-        requireNonNull(service, "A non-null ResourceService must be provided!");
-        this.service = service;
+    public WebACService(final ResourceService resourceService, final AgentService agentService) {
+        requireNonNull(resourceService, "A non-null ResourceService must be provided!");
+        requireNonNull(agentService, "A non-null AgentService must be provided!");
+        // TODO use the service loader for this
+        this.service = resourceService;
+        this.agentSvc = agentService;
     }
 
     @Override
@@ -121,10 +130,13 @@ public class WebACService implements AccessControlService {
         requireNonNull(session, "A non-null session must be provided!");
         requireNonNull(identifier, "A non-null identifier must be provided!");
 
-        // TODO -- add some sort of admin short-circut
-        //if (session.isAdmin()) {
-            //return true;
-        //}
+        if (agentSvc.isAdmin(session.getAgent())) {
+            return true;
+        }
+
+        final List<IRI> agentGroups = agentSvc.getGroups(session.getAgent()).collect(toList());
+        final List<IRI> delegatedGroups = session.getDelegatedBy().map(agentSvc::getGroups).orElse(empty())
+                        .collect(toList());
 
         return service.find(identifier).map(resource -> getAllAuthorizationsFor(resource)
                     .filter(auth -> auth.getMode().contains(mode))
@@ -133,8 +145,8 @@ public class WebACService implements AccessControlService {
                                 !auth.getAgent().contains(session.getDelegatedBy().get())) {
                             return false;
                         }
-                        return auth.getAgent().contains(session.getUser()) ||
-                                session.getGroups().stream().anyMatch(auth.getAgentGroup()::contains);
+                        return auth.getAgent().contains(session.getAgent()) ||
+                                agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
                     })).orElse(false);
     }
 
