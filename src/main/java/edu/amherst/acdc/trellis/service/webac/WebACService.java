@@ -65,26 +65,26 @@ public class WebACService implements AccessControlService {
     private AgentService agentSvc;
 
     @Override
-    public synchronized void setResourceService(final ResourceService service) {
+    public synchronized void bind(final ResourceService service) {
         requireNonNull(service, "A non-null ResourceService must be provided!");
         this.service = service;
     }
 
     @Override
-    public synchronized void unsetResourceService(final ResourceService service) {
+    public synchronized void unbind(final ResourceService service) {
         if (this.service == service) {
             this.service = null;
         }
     }
 
     @Override
-    public synchronized void setAgentService(final AgentService service) {
+    public synchronized void bind(final AgentService service) {
         requireNonNull(service, "A non-null AgentService must be provided!");
         this.agentSvc = service;
     }
 
     @Override
-    public synchronized void unsetAgentService(final AgentService service) {
+    public synchronized void unbind(final AgentService service) {
         if (this.agentSvc == service) {
             this.agentSvc = null;
         }
