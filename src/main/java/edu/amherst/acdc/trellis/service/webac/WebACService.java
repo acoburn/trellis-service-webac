@@ -15,6 +15,7 @@
  */
 package edu.amherst.acdc.trellis.service.webac;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -112,7 +113,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Optional<IRI> findAclFor(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = service.find(identifier);
+        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(identifier));
         return ofNullable(resource.flatMap(Resource::getAccessControl)
             .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAclFor).orElse(null)));
     }
@@ -120,7 +121,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = service.find(identifier);
+        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(identifier));
         return ofNullable(resource.filter(res -> res.getAccessControl().isPresent())
                 .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAncestorWithAccessControl)
                     .orElse(null)));
@@ -129,7 +130,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Stream<Authorization> getAuthorizations(final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        return service.find(identifier).map(resource ->
+        return ofNullable(service).flatMap(svc -> svc.find(identifier)).map(resource ->
             resource.getChildren().parallel().unordered().map(service::find).filter(Optional::isPresent)
                 .map(Optional::get).filter(isAuthorization).flatMap(auth -> {
                     final Graph graph = rdf.createGraph();
@@ -139,19 +140,23 @@ public class WebACService implements AccessControlService {
                 })).orElse(empty());
     }
 
+    private List<IRI> getGroups(final IRI agent) {
+        return ofNullable(agentSvc).map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
+    }
+
     private Boolean canPerformOperation(final Session session, final IRI identifier, final IRI mode) {
         requireNonNull(session, "A non-null session must be provided!");
         requireNonNull(identifier, "A non-null identifier must be provided!");
 
-        if (agentSvc.isAdmin(session.getAgent())) {
+        if (ofNullable(agentSvc).filter(svc -> svc.isAdmin(session.getAgent())).isPresent()) {
             return true;
         }
 
-        final List<IRI> agentGroups = agentSvc.getGroups(session.getAgent()).collect(toList());
-        final List<IRI> delegatedGroups = session.getDelegatedBy().map(agentSvc::getGroups).orElse(empty())
-                        .collect(toList());
+        final List<IRI> agentGroups = getGroups(session.getAgent());
+        final List<IRI> delegatedGroups = session.getDelegatedBy().map(this::getGroups).orElse(emptyList());
 
-        return service.find(identifier).map(resource -> getAllAuthorizationsFor(resource)
+        return ofNullable(service).flatMap(svc -> svc.find(identifier))
+                    .map(resource -> getAllAuthorizationsFor(resource)
                     .filter(auth -> auth.getMode().contains(mode))
                     .anyMatch(auth -> {
                         if (session.getDelegatedBy().isPresent() &&
