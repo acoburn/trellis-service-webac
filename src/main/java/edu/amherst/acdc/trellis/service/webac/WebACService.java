@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import javax.inject.Inject;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.AccessControlService;
@@ -68,10 +69,10 @@ public class WebACService implements AccessControlService {
      * @param resourceService the resource service
      * @param agentService the agent service
      */
+    @Inject
     public WebACService(final ResourceService resourceService, final AgentService agentService) {
         requireNonNull(resourceService, "A non-null ResourceService must be provided!");
         requireNonNull(agentService, "A non-null AgentService must be provided!");
-        // TODO use the service loader for this
         this.service = resourceService;
         this.agentSvc = agentService;
     }
