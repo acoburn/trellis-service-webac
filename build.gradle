@@ -32,7 +32,6 @@ ext {
     trellisVocabularyVersion = '0.1.0-SNAPSHOT'
     commonsRdfVersion = '0.3.0-incubating'
     slf4jVersion = '1.7.21'
-    javaeeVersion = '7.0'
 
     /* Testing */
     junitVersion = '4.12'
@@ -61,7 +60,6 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     compile group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    compile group: 'javax', name: 'javaee-api', version: javaeeVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
     testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion

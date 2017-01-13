@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import javax.inject.Inject;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.AccessControlService;
@@ -60,21 +59,34 @@ public class WebACService implements AccessControlService {
                 resource.getTypes().anyMatch(authorization.getAccessToClass()::contains);
     }
 
-    private final ResourceService service;
+    private ResourceService service;
 
-    private final AgentService agentSvc;
+    private AgentService agentSvc;
 
-    /**
-     * Create a WebAC service
-     * @param resourceService the resource service
-     * @param agentService the agent service
-     */
-    @Inject
-    public WebACService(final ResourceService resourceService, final AgentService agentService) {
-        requireNonNull(resourceService, "A non-null ResourceService must be provided!");
-        requireNonNull(agentService, "A non-null AgentService must be provided!");
-        this.service = resourceService;
-        this.agentSvc = agentService;
+    @Override
+    public synchronized void setResourceService(final ResourceService service) {
+        requireNonNull(service, "A non-null ResourceService must be provided!");
+        this.service = service;
+    }
+
+    @Override
+    public synchronized void unsetResourceService(final ResourceService service) {
+        if (this.service == service) {
+            this.service = null;
+        }
+    }
+
+    @Override
+    public synchronized void setAgentService(final AgentService service) {
+        requireNonNull(service, "A non-null AgentService must be provided!");
+        this.agentSvc = service;
+    }
+
+    @Override
+    public synchronized void unsetAgentService(final AgentService service) {
+        if (this.agentSvc == service) {
+            this.agentSvc = null;
+        }
     }
 
     @Override
