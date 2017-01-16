@@ -111,28 +111,29 @@ public class WebACService implements AccessControlService {
     }
 
     @Override
-    public Optional<IRI> findAclFor(final IRI identifier) {
+    public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(identifier));
+        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.flatMap(Resource::getAccessControl)
-            .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAclFor).orElse(null)));
+            .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(id -> findAclFor(session, id))
+                .orElse(null)));
     }
 
     @Override
-    public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
+    public Optional<Resource> findAncestorWithAccessControl(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(identifier));
+        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.filter(res -> res.getAccessControl().isPresent())
-                .orElseGet(() -> resource.flatMap(Resource::getParent).flatMap(this::findAncestorWithAccessControl)
-                    .orElse(null)));
+                .orElseGet(() -> resource.flatMap(Resource::getParent)
+                    .flatMap(id -> findAncestorWithAccessControl(session, id)).orElse(null)));
     }
 
     @Override
-    public Stream<Authorization> getAuthorizations(final IRI identifier) {
+    public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        return ofNullable(service).flatMap(svc -> svc.find(identifier)).map(resource ->
-            resource.getChildren().parallel().unordered().map(service::find).filter(Optional::isPresent)
-                .map(Optional::get).filter(isAuthorization).flatMap(auth -> {
+        return ofNullable(service).flatMap(svc -> svc.find(session, identifier)).map(resource ->
+            resource.getChildren().parallel().unordered().map(id -> service.find(session, id))
+                .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).flatMap(auth -> {
                     final Graph graph = rdf.createGraph();
                     auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
                         .forEach(graph::add);
@@ -155,8 +156,8 @@ public class WebACService implements AccessControlService {
         final List<IRI> agentGroups = getGroups(session.getAgent());
         final List<IRI> delegatedGroups = session.getDelegatedBy().map(this::getGroups).orElse(emptyList());
 
-        return ofNullable(service).flatMap(svc -> svc.find(identifier))
-                    .map(resource -> getAllAuthorizationsFor(resource)
+        return ofNullable(service).flatMap(svc -> svc.find(session, identifier))
+                    .map(resource -> getAllAuthorizationsFor(session, resource)
                     .filter(auth -> auth.getMode().contains(mode))
                     .anyMatch(auth -> {
                         if (session.getDelegatedBy().isPresent() &&
@@ -168,13 +169,13 @@ public class WebACService implements AccessControlService {
                     })).orElse(false);
     }
 
-    private Stream<Authorization> getAllAuthorizationsFor(final Resource resource) {
+    private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
         if (resource.getAccessControl().isPresent()) {
-            return getAuthorizations(resource.getAccessControl().get()).filter(hasAccess(resource));
+            return getAuthorizations(session, resource.getAccessControl().get()).filter(hasAccess(resource));
         }
-        return resource.getParent().flatMap(this::findAncestorWithAccessControl).map(ancestor ->
-            ancestor.getAccessControl().map(this::getAuthorizations).orElse(empty()).filter(hasAccess(ancestor)))
-                .orElse(empty());
+        return resource.getParent().flatMap(id -> findAncestorWithAccessControl(session, id)).map(ancestor ->
+            ancestor.getAccessControl().map(id -> getAuthorizations(session, id))
+                .orElse(empty()).filter(hasAccess(ancestor))).orElse(empty());
     }
 
 }
