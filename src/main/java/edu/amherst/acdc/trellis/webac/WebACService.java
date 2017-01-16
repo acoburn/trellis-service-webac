@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.service.webac;
+package edu.amherst.acdc.trellis.webac;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;

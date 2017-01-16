@@ -25,4 +25,4 @@
  *
  * @author acoburn
  */
-package edu.amherst.acdc.trellis.service.webac;
+package edu.amherst.acdc.trellis.webac;
