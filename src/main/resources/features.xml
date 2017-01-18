@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="trellis-service-webac-${project.version}">
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="trellis-webac-${project.version}">
 
   <repository>mvn:edu.amherst.acdc/trellis-api/${trellisApiVersion}/xml/features</repository>
   <repository>mvn:edu.amherst.acdc/trellis-spi/${trellisSpiVersion}/xml/features</repository>
   <repository>mvn:edu.amherst.acdc/trellis-vocabulary/${trellisVocabularyVersion}/xml/features</repository>
 
-  <feature name="trellis-service-webac" version="${project.version}">
+  <feature name="trellis-webac" version="${project.version}">
     <details>Installs the Trellis WebAC bundle</details>
 
     <feature>trellis-api</feature>
@@ -22,6 +22,6 @@
     <bundle dependency="true">mvn:org.apache.commons/commons-csv/${commonsCsvVersion}</bundle>
     <bundle dependency="true">mvn:org.apache.thrift/libthrift/${thriftVersion}</bundle>
 
-    <bundle>mvn:edu.amherst.acdc/trellis-service-webac/${project.version}</bundle>
+    <bundle>mvn:edu.amherst.acdc/trellis-webac/${project.version}</bundle>
   </feature>
 </features>

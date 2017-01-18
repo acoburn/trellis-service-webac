@@ -205,9 +205,9 @@ uploadArchives {
             }
 
             scm {
-                connection 'scm:git:git://github.com/acoburn/trellis-service-webac.git'
-                developerConnection 'scm:git:git@github.com/acoburn/trellis-service-webac.git'
-                url 'https://github.com/acoburn/trellis-service-webac'
+                connection 'scm:git:git://github.com/acoburn/trellis-webac.git'
+                developerConnection 'scm:git:git@github.com/acoburn/trellis-webac.git'
+                url 'https://github.com/acoburn/trellis-webac'
                 tag 'HEAD'
             }
 
@@ -242,7 +242,7 @@ checkstyle {
 sonarqube {
     properties {
         property "sonar.projectName", "Amherst College Trellis Repository WebAC Service"
-        property "sonar.projectKey", "edu.amherst.acdc:trellis-service-webac"
+        property "sonar.projectKey", "edu.amherst.acdc:trellis-webac"
     }
 }
 
