@@ -59,6 +59,8 @@ public class WebACService implements AccessControlService {
         return null;
     }
 
+    private final RDF rdf = getInstance();
+
     private static Predicate<Resource> isAuthorization = resource ->
         resource.getTypes().anyMatch(ACL.Authorization::equals);
 
@@ -138,7 +140,6 @@ public class WebACService implements AccessControlService {
     @Override
     public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final RDF rdf = getInstance();
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier)).map(resource ->
             resource.getChildren().parallel().unordered().map(id -> service.find(session, id))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).flatMap(auth -> {
