@@ -13,14 +13,6 @@
     <feature>trellis-vocabulary</feature>
 
     <bundle dependency="true">mvn:org.apache.commons/commons-rdf-api/${commonsRdfVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-rdf-jena/${commonsRdfVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-rdf-api/${commonsRdfVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-rdf-jena/${commonsRdfVersion}</bundle>
-    <bundle dependency="treu">mvn:org.apahce.jena/jena-osgi/${jenaVersion}</bundle>
-    <bundle dependency="true">mvn:com.github.andrewoma.dexx/collection/${dexxVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commonsLangVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-csv/${commonsCsvVersion}</bundle>
-    <bundle dependency="true">mvn:org.apache.thrift/libthrift/${thriftVersion}</bundle>
 
     <bundle>mvn:edu.amherst.acdc/trellis-webac/${project.version}</bundle>
   </feature>

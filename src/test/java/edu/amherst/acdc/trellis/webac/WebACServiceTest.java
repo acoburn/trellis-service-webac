@@ -37,7 +37,7 @@ import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.PROV;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.jena.JenaRDF;
+import org.apache.commons.rdf.simple.SimpleRDF;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class WebACServiceTest {
 
-    private static final RDF rdf = new JenaRDF();
+    private static final RDF rdf = new SimpleRDF();
 
     @Mock
     private ResourceService mockResourceService;

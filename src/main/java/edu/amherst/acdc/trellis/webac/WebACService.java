@@ -26,6 +26,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -39,7 +40,6 @@ import edu.amherst.acdc.trellis.vocabulary.ACL;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.jena.JenaRDF;
 import org.slf4j.Logger;
 
 /**
@@ -50,7 +50,14 @@ public class WebACService implements AccessControlService {
 
     private static final Logger LOGGER = getLogger(WebACService.class);
 
-    private static final RDF rdf = new JenaRDF();
+    private static ServiceLoader<RDF> rdfLoader = ServiceLoader.load(RDF.class);
+
+    private static RDF getInstance() {
+        for (final RDF rdf : rdfLoader) {
+            return rdf;
+        }
+        return null;
+    }
 
     private static Predicate<Resource> isAuthorization = resource ->
         resource.getTypes().anyMatch(ACL.Authorization::equals);
@@ -131,6 +138,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
+        final RDF rdf = getInstance();
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier)).map(resource ->
             resource.getChildren().parallel().unordered().map(id -> service.find(session, id))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).flatMap(auth -> {
