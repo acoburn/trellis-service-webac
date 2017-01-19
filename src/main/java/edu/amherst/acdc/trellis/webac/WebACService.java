@@ -158,15 +158,15 @@ public class WebACService implements AccessControlService {
 
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier))
                     .map(resource -> getAllAuthorizationsFor(session, resource)
-                    .filter(auth -> auth.getMode().contains(mode))
-                    .anyMatch(auth -> {
-                        if (session.getDelegatedBy().isPresent() &&
-                                !auth.getAgent().contains(session.getDelegatedBy().get())) {
-                            return false;
-                        }
-                        return auth.getAgent().contains(session.getAgent()) ||
-                                agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
-                    })).orElse(false);
+                        .filter(auth -> auth.getMode().contains(mode))
+                        .anyMatch(auth -> {
+                            if (session.getDelegatedBy().isPresent() &&
+                                    !auth.getAgent().contains(session.getDelegatedBy().get())) {
+                                return false;
+                            }
+                            return auth.getAgent().contains(session.getAgent()) ||
+                                    agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
+                        })).orElse(false);
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
