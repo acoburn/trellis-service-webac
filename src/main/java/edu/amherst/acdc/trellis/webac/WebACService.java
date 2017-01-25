@@ -100,26 +100,6 @@ public class WebACService implements AccessControlService {
     }
 
     @Override
-    public Boolean canRead(final Session session, final IRI identifier) {
-        return canPerformOperation(session, identifier, ACL.Read);
-    }
-
-    @Override
-    public Boolean canWrite(final Session session, final IRI identifier) {
-        return canPerformOperation(session, identifier, ACL.Write);
-    }
-
-    @Override
-    public Boolean canControl(final Session session, final IRI identifier) {
-        return canPerformOperation(session, identifier, ACL.Control);
-    }
-
-    @Override
-    public Boolean canAppend(final Session session, final IRI identifier) {
-        return canPerformOperation(session, identifier, ACL.Append);
-    }
-
-    @Override
     public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(session, identifier));
@@ -150,13 +130,11 @@ public class WebACService implements AccessControlService {
                 })).orElse(empty());
     }
 
-    private List<IRI> getGroups(final IRI agent) {
-        return ofNullable(agentSvc).map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
-    }
-
-    private Boolean canPerformOperation(final Session session, final IRI identifier, final IRI mode) {
+    @Override
+    public Boolean anyMatch(final Session session, final IRI identifier, final Predicate<IRI> predicate) {
         requireNonNull(session, "A non-null session must be provided!");
         requireNonNull(identifier, "A non-null identifier must be provided!");
+        requireNonNull(predicate, "A non-null predicate must be provided!");
 
         if (ofNullable(agentSvc).filter(svc -> svc.isAdmin(session.getAgent())).isPresent()) {
             return true;
@@ -167,15 +145,19 @@ public class WebACService implements AccessControlService {
 
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier))
                     .map(resource -> getAllAuthorizationsFor(session, resource)
-                        .filter(auth -> auth.getMode().contains(mode))
-                        .anyMatch(auth -> {
+                        .filter(auth -> {
                             if (session.getDelegatedBy().isPresent() &&
                                     !auth.getAgent().contains(session.getDelegatedBy().get())) {
                                 return false;
                             }
                             return auth.getAgent().contains(session.getAgent()) ||
                                     agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
-                        })).orElse(false);
+                        })).orElse(empty())
+                    .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+    }
+
+    private List<IRI> getGroups(final IRI agent) {
+        return ofNullable(agentSvc).map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
