@@ -124,15 +124,15 @@ public class WebACServiceTest {
         when(mockResourceService.find(any(Session.class), eq(authIRI7))).thenReturn(of(mockAuthResource7));
         when(mockResourceService.find(any(Session.class), eq(authIRI8))).thenReturn(of(mockAuthResource8));
 
-        when(mockResource.getParent()).thenReturn(of(childIRI));
-        when(mockChildResource.getParent()).thenReturn(of(parentIRI));
-        when(mockParentResource.getParent()).thenReturn(of(rootIRI));
-        when(mockRootResource.getParent()).thenReturn(empty());
+        when(mockResource.getContainedBy()).thenReturn(of(childIRI));
+        when(mockChildResource.getContainedBy()).thenReturn(of(parentIRI));
+        when(mockParentResource.getContainedBy()).thenReturn(of(rootIRI));
+        when(mockRootResource.getContainedBy()).thenReturn(empty());
 
-        when(mockResource.getAccessControl()).thenReturn(empty());
-        when(mockChildResource.getAccessControl()).thenReturn(of(publicAclIRI));
-        when(mockParentResource.getAccessControl()).thenReturn(empty());
-        when(mockRootResource.getAccessControl()).thenReturn(of(privateAclIRI));
+        when(mockResource.getAcl()).thenReturn(empty());
+        when(mockChildResource.getAcl()).thenReturn(of(publicAclIRI));
+        when(mockParentResource.getAcl()).thenReturn(empty());
+        when(mockRootResource.getAcl()).thenReturn(of(privateAclIRI));
 
         when(mockResource.getTypes()).thenAnswer(inv -> Stream.empty());
         when(mockChildResource.getTypes()).thenAnswer(inv -> Stream.empty());
@@ -216,8 +216,8 @@ public class WebACServiceTest {
         when(mockSession.getAgent()).thenReturn(agentIRI);
         when(mockSession.getDelegatedBy()).thenReturn(empty());
 
-        when(mockPublicAclResource.getChildren()).thenAnswer(inv -> Stream.of(authIRI1, authIRI2, authIRI3, authIRI4));
-        when(mockPrivateAclResource.getChildren()).thenAnswer(inv -> Stream.of(authIRI5, authIRI6, authIRI7, authIRI8));
+        when(mockPublicAclResource.getContains()).thenAnswer(inv -> Stream.of(authIRI1, authIRI2, authIRI3, authIRI4));
+        when(mockPrivateAclResource.getContains()).thenAnswer(inv -> Stream.of(authIRI5, authIRI6, authIRI7, authIRI8));
     }
 
     @Test
