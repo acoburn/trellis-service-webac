@@ -205,9 +205,9 @@ uploadArchives {
             }
 
             scm {
-                connection 'scm:git:git://github.com/acoburn/trellis-webac.git'
-                developerConnection 'scm:git:git@github.com/acoburn/trellis-webac.git'
-                url 'https://github.com/acoburn/trellis-webac'
+                connection 'scm:git:git://github.com/trellis-ldp/trellis-webac.git'
+                developerConnection 'scm:git:git@github.com/trellis-ldp/trellis-webac.git'
+                url 'https://github.com/trellis-ldp/trellis-webac'
                 tag 'HEAD'
             }
 
