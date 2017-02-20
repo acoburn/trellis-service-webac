@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
 import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -122,11 +121,11 @@ public class WebACService implements AccessControlService {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier)).map(resource ->
             resource.getContains().parallel().unordered().map(id -> service.find(session, id))
-                .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).flatMap(auth -> {
+                .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).map(auth -> {
                     final Graph graph = rdf.createGraph();
                     auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
                         .forEach(graph::add);
-                    return of(new Authorization(auth.getIdentifier(), graph));
+                    return new Authorization(auth.getIdentifier(), graph);
                 })).orElse(empty());
     }
 
@@ -140,20 +139,21 @@ public class WebACService implements AccessControlService {
             return true;
         }
 
-        final List<IRI> agentGroups = getGroups(session.getAgent());
-        final List<IRI> delegatedGroups = session.getDelegatedBy().map(this::getGroups).orElse(emptyList());
-
         return ofNullable(service).flatMap(svc -> svc.find(session, identifier))
                     .map(resource -> getAllAuthorizationsFor(session, resource)
-                        .filter(auth -> {
-                            if (session.getDelegatedBy().isPresent() &&
-                                    !auth.getAgent().contains(session.getDelegatedBy().get())) {
-                                return false;
-                            }
-                            return auth.getAgent().contains(session.getAgent()) ||
-                                    agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
-                        })).orElse(empty())
-                    .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+                        .filter(delegateFilter(session).negate())
+                        .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
+                    .orElse(empty()).anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+    }
+
+    private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
+        return auth -> auth.getAgent().contains(session.getAgent()) ||
+            agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
+    }
+
+    private Predicate<Authorization> delegateFilter(final Session session) {
+        return auth -> session.getDelegatedBy().isPresent() &&
+            !auth.getAgent().contains(session.getDelegatedBy().get());
     }
 
     private List<IRI> getGroups(final IRI agent) {
@@ -168,5 +168,4 @@ public class WebACService implements AccessControlService {
             ancestor.getAcl().map(id -> getAuthorizations(session, id))
                 .orElse(empty()).filter(hasAccess(ancestor))).orElse(empty());
     }
-
 }
