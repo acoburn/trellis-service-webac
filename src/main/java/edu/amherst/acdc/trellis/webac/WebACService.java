@@ -32,6 +32,7 @@ import edu.amherst.acdc.trellis.spi.Session;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
@@ -76,12 +77,14 @@ public class WebACService implements AccessControlService {
     @Override
     public synchronized void bind(final ResourceService service) {
         requireNonNull(service, "A non-null ResourceService must be provided!");
+        LOGGER.info("Binding ResourceService to the AuthorizationService");
         this.service = service;
     }
 
     @Override
     public synchronized void unbind(final ResourceService service) {
-        if (this.service == service) {
+        if (Objects.equals(this.service, service)) {
+            LOGGER.info("Unbinding ResourceService to the AuthorizationService");
             this.service = null;
         }
     }
@@ -89,12 +92,14 @@ public class WebACService implements AccessControlService {
     @Override
     public synchronized void bind(final AgentService service) {
         requireNonNull(service, "A non-null AgentService must be provided!");
+        LOGGER.info("Binding AgentService to the AuthorizationService");
         this.agentSvc = service;
     }
 
     @Override
     public synchronized void unbind(final AgentService service) {
-        if (this.agentSvc == service) {
+        if (Objects.equals(this.agentSvc, service)) {
+            LOGGER.info("Unbinding AgentService to the AuthorizationService");
             this.agentSvc = null;
         }
     }
