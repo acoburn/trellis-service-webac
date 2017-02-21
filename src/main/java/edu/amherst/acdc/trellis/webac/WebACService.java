@@ -106,7 +106,6 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
-        requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.flatMap(Resource::getAcl)
             .orElseGet(() -> resource.flatMap(Resource::getContainedBy).flatMap(id -> findAclFor(session, id))
@@ -115,7 +114,6 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final Session session, final IRI identifier) {
-        requireNonNull(identifier, "A non-null identifier must be provided!");
         final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.filter(res -> res.getAcl().isPresent())
                 .orElseGet(() -> resource.flatMap(Resource::getContainedBy)
@@ -124,7 +122,6 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
-        requireNonNull(identifier, "A non-null identifier must be provided!");
         return getResourceService().flatMap(svc -> svc.find(session, identifier)).map(resource ->
             resource.getContains().parallel().unordered()
                 .map(id -> getResourceService().flatMap(svc -> svc.find(session, id)))
@@ -139,7 +136,6 @@ public class WebACService implements AccessControlService {
     @Override
     public Boolean anyMatch(final Session session, final IRI identifier, final Predicate<IRI> predicate) {
         requireNonNull(session, "A non-null session must be provided!");
-        requireNonNull(identifier, "A non-null identifier must be provided!");
         requireNonNull(predicate, "A non-null predicate must be provided!");
 
         if (getAgentService().filter(svc -> svc.isAdmin(session.getAgent())).isPresent()) {
