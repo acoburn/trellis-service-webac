@@ -15,19 +15,13 @@
  */
 package edu.amherst.acdc.trellis.webac;
 
+import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.api.Resource;
 import edu.amherst.acdc.trellis.spi.AccessControlService;
@@ -36,6 +30,13 @@ import edu.amherst.acdc.trellis.spi.Authorization;
 import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
@@ -101,7 +102,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(session, identifier));
+        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.flatMap(Resource::getAcl)
             .orElseGet(() -> resource.flatMap(Resource::getContainedBy).flatMap(id -> findAclFor(session, id))
                 .orElse(null)));
@@ -110,7 +111,7 @@ public class WebACService implements AccessControlService {
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        final Optional<Resource> resource = ofNullable(service).flatMap(svc -> svc.find(session, identifier));
+        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
         return ofNullable(resource.filter(res -> res.getAcl().isPresent())
                 .orElseGet(() -> resource.flatMap(Resource::getContainedBy)
                     .flatMap(id -> findAncestorWithAccessControl(session, id)).orElse(null)));
@@ -119,13 +120,14 @@ public class WebACService implements AccessControlService {
     @Override
     public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
         requireNonNull(identifier, "A non-null identifier must be provided!");
-        return ofNullable(service).flatMap(svc -> svc.find(session, identifier)).map(resource ->
-            resource.getContains().parallel().unordered().map(id -> service.find(session, id))
+        return getResourceService().flatMap(svc -> svc.find(session, identifier)).map(resource ->
+            resource.getContains().parallel().unordered()
+                .map(id -> getResourceService().flatMap(svc -> svc.find(session, id)))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).map(auth -> {
                     final Graph graph = rdf.createGraph();
                     auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
                         .forEach(graph::add);
-                    return new Authorization(auth.getIdentifier(), graph);
+                    return Authorization.from(auth.getIdentifier(), graph);
                 })).orElse(empty());
     }
 
@@ -135,11 +137,11 @@ public class WebACService implements AccessControlService {
         requireNonNull(identifier, "A non-null identifier must be provided!");
         requireNonNull(predicate, "A non-null predicate must be provided!");
 
-        if (ofNullable(agentSvc).filter(svc -> svc.isAdmin(session.getAgent())).isPresent()) {
+        if (getAgentService().filter(svc -> svc.isAdmin(session.getAgent())).isPresent()) {
             return true;
         }
 
-        return ofNullable(service).flatMap(svc -> svc.find(session, identifier))
+        return getResourceService().flatMap(svc -> svc.find(session, identifier))
                     .map(resource -> getAllAuthorizationsFor(session, resource)
                         .filter(delegateFilter(session).negate())
                         .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
@@ -157,7 +159,7 @@ public class WebACService implements AccessControlService {
     }
 
     private List<IRI> getGroups(final IRI agent) {
-        return ofNullable(agentSvc).map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
+        return getAgentService().map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
@@ -167,5 +169,13 @@ public class WebACService implements AccessControlService {
         return resource.getContainedBy().flatMap(id -> findAncestorWithAccessControl(session, id)).map(ancestor ->
             ancestor.getAcl().map(id -> getAuthorizations(session, id))
                 .orElse(empty()).filter(hasAccess(ancestor))).orElse(empty());
+    }
+
+    private synchronized Optional<AgentService> getAgentService() {
+        return ofNullable(agentSvc);
+    }
+
+    private synchronized Optional<ResourceService> getResourceService() {
+        return ofNullable(service);
     }
 }
