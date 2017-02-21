@@ -241,8 +241,11 @@ checkstyle {
 
 sonarqube {
     properties {
-        property "sonar.projectName", "Amherst College Trellis Repository WebAC Service"
+        property "sonar.projectName", "Trellis Repository WebAC Service"
         property "sonar.projectKey", "edu.amherst.acdc:trellis-webac"
+        property "sonar.links.homepage", "https://github.com/trellis-ldp/trellis"
+        property "sonar.links.issue", "https://github.com/trellis-ldp/trellis-webac/issues"
+        property "sonar.links.scm_dev", "scm:git:git@github.com:trellis-ldp/trellis-webac.git"
     }
 }
 
