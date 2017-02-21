@@ -145,7 +145,8 @@ public class WebACService implements AccessControlService {
                     .map(resource -> getAllAuthorizationsFor(session, resource)
                         .filter(delegateFilter(session).negate())
                         .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
-                    .orElse(empty()).anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+                    .orElse(empty()).peek(auth -> LOGGER.debug(auth.getIdentifier().getIRIString()))
+                    .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
@@ -163,12 +164,10 @@ public class WebACService implements AccessControlService {
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
-        if (resource.getAcl().isPresent()) {
-            return getAuthorizations(session, resource.getAcl().get()).filter(hasAccess(resource));
-        }
-        return resource.getContainedBy().flatMap(id -> findAncestorWithAccessControl(session, id)).map(ancestor ->
-            ancestor.getAcl().map(id -> getAuthorizations(session, id))
-                .orElse(empty()).filter(hasAccess(ancestor))).orElse(empty());
+        return resource.getAcl().map(acl -> getAuthorizations(session, acl).filter(hasAccess(resource)))
+            .orElseGet(() -> resource.getContainedBy().flatMap(id -> findAncestorWithAccessControl(session, id))
+                    .map(ancestor -> ancestor.getAcl().map(id -> getAuthorizations(session, id)).orElse(empty())
+                        .filter(hasAccess(ancestor))).orElse(empty()));
     }
 
     private synchronized Optional<AgentService> getAgentService() {
