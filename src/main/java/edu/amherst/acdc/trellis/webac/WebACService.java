@@ -51,21 +51,12 @@ public class WebACService implements AccessControlService {
 
     private static final Logger LOGGER = getLogger(WebACService.class);
 
-    private static ServiceLoader<RDF> rdfLoader = ServiceLoader.load(RDF.class);
+    private static final RDF rdf = ServiceLoader.load(RDF.class).iterator().next();
 
-    private static RDF getInstance() {
-        for (final RDF rdf : rdfLoader) {
-            return rdf;
-        }
-        return null;
-    }
-
-    private final RDF rdf = getInstance();
-
-    private static Predicate<Resource> isAuthorization = resource ->
+    private static final Predicate<Resource> isAuthorization = resource ->
         resource.getTypes().anyMatch(ACL.Authorization::equals);
 
-    private static Predicate<Authorization> hasAccess(final Resource resource) {
+    private static final Predicate<Authorization> hasAccess(final Resource resource) {
         return authorization -> authorization.getAccessTo().contains(resource.getIdentifier()) ||
                 resource.getTypes().anyMatch(authorization.getAccessToClass()::contains);
     }
