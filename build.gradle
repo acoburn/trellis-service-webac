@@ -250,8 +250,8 @@ sonarqube {
 }
 
 task docs(type: Javadoc) {
-    outputs.upToDateWhen { false }
     source sourceSets.main.allJava
+    outputs.upToDateWhen { false }
     classpath = files(sourceSets.main.compileClasspath)
     destinationDir = new File(projectDir, "docs/${version}")
     options {
