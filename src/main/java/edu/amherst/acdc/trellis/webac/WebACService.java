@@ -97,7 +97,7 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
-        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
+        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.get(session, identifier));
         return ofNullable(resource.flatMap(Resource::getAcl)
             .orElseGet(() -> resource.flatMap(Resource::getContainedBy).flatMap(id -> findAclFor(session, id))
                 .orElse(null)));
@@ -105,7 +105,7 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Optional<Resource> findAncestorWithAccessControl(final Session session, final IRI identifier) {
-        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.find(session, identifier));
+        final Optional<Resource> resource = getResourceService().flatMap(svc -> svc.get(session, identifier));
         return ofNullable(resource.filter(res -> res.getAcl().isPresent())
                 .orElseGet(() -> resource.flatMap(Resource::getContainedBy)
                     .flatMap(id -> findAncestorWithAccessControl(session, id)).orElse(null)));
@@ -113,9 +113,9 @@ public class WebACService implements AccessControlService {
 
     @Override
     public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
-        return getResourceService().flatMap(svc -> svc.find(session, identifier)).map(resource ->
+        return getResourceService().flatMap(svc -> svc.get(session, identifier)).map(resource ->
             resource.getContains().parallel().unordered()
-                .map(id -> getResourceService().flatMap(svc -> svc.find(session, id)))
+                .map(id -> getResourceService().flatMap(svc -> svc.get(session, id)))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).map(auth -> {
                     final Graph graph = rdf.createGraph();
                     auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
@@ -133,7 +133,7 @@ public class WebACService implements AccessControlService {
             return true;
         }
 
-        return getResourceService().flatMap(svc -> svc.find(session, identifier))
+        return getResourceService().flatMap(svc -> svc.get(session, identifier))
                     .map(resource -> getAllAuthorizationsFor(session, resource)
                         .filter(delegateFilter(session).negate())
                         .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
