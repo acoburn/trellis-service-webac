@@ -15,7 +15,6 @@
  */
 package edu.amherst.acdc.trellis.webac;
 
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -30,6 +29,7 @@ import edu.amherst.acdc.trellis.spi.Authorization;
 import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
 
@@ -118,8 +119,9 @@ public class WebACService implements AccessControlService {
                 .map(id -> getResourceService().flatMap(svc -> svc.get(session, id)))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).map(auth -> {
                     final Graph graph = rdf.createGraph();
-                    auth.stream(USER_MANAGED).filter(triple -> triple.getPredicate().getIRIString().startsWith(ACL.uri))
-                        .forEach(graph::add);
+                    auth.stream().filter(quad -> quad.getGraphName().filter(Trellis.PreferUserManaged::equals)
+                            .isPresent() && quad.getPredicate().getIRIString().startsWith(ACL.uri))
+                        .map(Quad::asTriple).forEach(graph::add);
                     return Authorization.from(auth.getIdentifier(), graph);
                 })).orElse(empty());
     }

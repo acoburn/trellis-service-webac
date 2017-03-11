@@ -17,7 +17,6 @@ package edu.amherst.acdc.trellis.webac;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static edu.amherst.acdc.trellis.api.Resource.TripleContext.USER_MANAGED;
 import static edu.amherst.acdc.trellis.vocabulary.RDF.type;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,6 +34,7 @@ import edu.amherst.acdc.trellis.spi.ResourceService;
 import edu.amherst.acdc.trellis.spi.Session;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.PROV;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.simple.SimpleRDF;
@@ -146,69 +146,69 @@ public class WebACServiceTest {
 
         when(mockAuthResource1.getIdentifier()).thenReturn(authIRI1);
         when(mockAuthResource1.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource1.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI1, type, ACL.Authorization),
-                rdf.createTriple(authIRI1, ACL.mode, ACL.Read),
-                rdf.createTriple(authIRI1, ACL.agent, bseegerIRI),
-                rdf.createTriple(authIRI1, ACL.accessTo, childIRI)));
+        when(mockAuthResource1.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI1, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI1, ACL.mode, ACL.Read),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI1, ACL.agent, bseegerIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI1, ACL.accessTo, childIRI)));
 
         when(mockAuthResource2.getIdentifier()).thenReturn(authIRI2);
         when(mockAuthResource2.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource2.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI2, type, ACL.Authorization),
-                rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
-                rdf.createTriple(authIRI2, ACL.agent, acoburnIRI),
-                rdf.createTriple(authIRI2, ACL.accessToClass, PROV.Activity)));
+        when(mockAuthResource2.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI2, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI2, ACL.mode, ACL.Read),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI2, ACL.agent, acoburnIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI2, ACL.accessToClass, PROV.Activity)));
 
         when(mockAuthResource3.getIdentifier()).thenReturn(authIRI3);
         when(mockAuthResource3.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource3.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI3, type, ACL.Authorization),
-                rdf.createTriple(authIRI3, ACL.mode, ACL.Read),
-                rdf.createTriple(authIRI3, ACL.mode, ACL.Write),
-                rdf.createTriple(authIRI3, ACL.mode, ACL.Control),
-                rdf.createTriple(authIRI3, ACL.agent, bseegerIRI),
-                rdf.createTriple(authIRI3, ACL.agent, agentIRI),
-                rdf.createTriple(authIRI3, ACL.accessTo, childIRI)));
+        when(mockAuthResource3.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.mode, ACL.Read),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.mode, ACL.Write),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.mode, ACL.Control),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.agent, bseegerIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.agent, agentIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI3, ACL.accessTo, childIRI)));
 
         when(mockAuthResource4.getIdentifier()).thenReturn(authIRI4);
         when(mockAuthResource4.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource4.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI4, ACL.agent, agentIRI),
-                rdf.createTriple(authIRI4, type, ACL.Authorization)));
+        when(mockAuthResource4.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI4, ACL.agent, agentIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI4, type, ACL.Authorization)));
 
         when(mockAuthResource5.getIdentifier()).thenReturn(authIRI5);
         when(mockAuthResource5.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource5.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI5, type, ACL.Authorization),
-                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
-                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
-                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
-                rdf.createTriple(authIRI5, ACL.mode, ACL.Append)));
+        when(mockAuthResource5.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI5, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI5, ACL.accessTo, rootIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI5, ACL.agent, bseegerIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI5, ACL.mode, ACL.Read),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI5, ACL.mode, ACL.Append)));
 
         when(mockAuthResource6.getIdentifier()).thenReturn(authIRI6);
         when(mockAuthResource6.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource6.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI6, type, ACL.Authorization),
-                rdf.createTriple(authIRI6, ACL.agent, acoburnIRI),
-                rdf.createTriple(authIRI6, ACL.accessTo, rootIRI),
-                rdf.createTriple(authIRI6, ACL.mode, ACL.Append)));
+        when(mockAuthResource6.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI6, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI6, ACL.agent, acoburnIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI6, ACL.accessTo, rootIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI6, ACL.mode, ACL.Append)));
 
         when(mockAuthResource7.getIdentifier()).thenReturn(authIRI7);
         when(mockAuthResource7.getTypes()).thenAnswer(inv -> Stream.empty());
-        when(mockAuthResource7.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI7, ACL.agent, acoburnIRI),
-                rdf.createTriple(authIRI7, ACL.accessTo, rootIRI),
-                rdf.createTriple(authIRI7, ACL.mode, ACL.Read)));
+        when(mockAuthResource7.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.agent, acoburnIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.accessTo, rootIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.mode, ACL.Read)));
 
         when(mockAuthResource8.getIdentifier()).thenReturn(authIRI8);
         when(mockAuthResource8.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
-        when(mockAuthResource8.stream(eq(USER_MANAGED))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI8, type, ACL.Authorization),
-                rdf.createTriple(authIRI8, ACL.agent, agentIRI),
-                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
-                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
-                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
+        when(mockAuthResource8.stream()).thenAnswer(inv -> Stream.of(
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI8, type, ACL.Authorization),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI8, ACL.agent, agentIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI8, ACL.accessTo, rootIRI),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI8, ACL.mode, ACL.Read),
+                rdf.createQuad(Trellis.PreferUserManaged, authIRI8, ACL.mode, ACL.Write)));
 
         when(mockAgentService.isAdmin(any(IRI.class))).thenReturn(false);
         when(mockAgentService.getGroups(any(IRI.class))).thenAnswer(inv -> Stream.empty());
