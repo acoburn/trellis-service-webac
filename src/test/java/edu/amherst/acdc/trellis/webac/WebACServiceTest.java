@@ -70,33 +70,33 @@ public class WebACServiceTest {
 
     private final AccessControlService testService = new WebACService();
 
-    private final IRI resourceIRI = rdf.createIRI("info:trellisrepo/parent/child/resource");
+    private final IRI resourceIRI = rdf.createIRI("trellis:repository/parent/child/resource");
 
-    private final IRI childIRI = rdf.createIRI("info:trellisrepo/parent/child");
+    private final IRI childIRI = rdf.createIRI("trellis:repository/parent/child");
 
-    private final IRI parentIRI = rdf.createIRI("info:trellisrepo/parent");
+    private final IRI parentIRI = rdf.createIRI("trellis:repository/parent");
 
-    private final IRI rootIRI = rdf.createIRI("info:trellisrepo");
+    private final IRI rootIRI = rdf.createIRI("trellis:repository");
 
-    private final IRI publicAclIRI = rdf.createIRI("info:trellisrepo/acl/public");
+    private final IRI publicAclIRI = rdf.createIRI("trellis:repository/acl/public");
 
-    private final IRI privateAclIRI = rdf.createIRI("info:trellisrepo/acl/private");
+    private final IRI privateAclIRI = rdf.createIRI("trellis:repository/acl/private");
 
-    private final IRI authIRI1 = rdf.createIRI("info:trellisrepo/acl/public/auth1");
+    private final IRI authIRI1 = rdf.createIRI("trellis:repository/acl/public/auth1");
 
-    private final IRI authIRI2 = rdf.createIRI("info:trellisrepo/acl/public/auth2");
+    private final IRI authIRI2 = rdf.createIRI("trellis:repository/acl/public/auth2");
 
-    private final IRI authIRI3 = rdf.createIRI("info:trellisrepo/acl/public/auth3");
+    private final IRI authIRI3 = rdf.createIRI("trellis:repository/acl/public/auth3");
 
-    private final IRI authIRI4 = rdf.createIRI("info:trellisrepo/acl/public/auth4");
+    private final IRI authIRI4 = rdf.createIRI("trellis:repository/acl/public/auth4");
 
-    private final IRI authIRI5 = rdf.createIRI("info:trellisrepo/acl/private/auth5");
+    private final IRI authIRI5 = rdf.createIRI("trellis:repository/acl/private/auth5");
 
-    private final IRI authIRI6 = rdf.createIRI("info:trellisrepo/acl/private/auth6");
+    private final IRI authIRI6 = rdf.createIRI("trellis:repository/acl/private/auth6");
 
-    private final IRI authIRI7 = rdf.createIRI("info:trellisrepo/acl/private/auth7");
+    private final IRI authIRI7 = rdf.createIRI("trellis:repository/acl/private/auth7");
 
-    private final IRI authIRI8 = rdf.createIRI("info:trellisrepo/acl/private/auth8");
+    private final IRI authIRI8 = rdf.createIRI("trellis:repository/acl/private/auth8");
 
     private final IRI bseegerIRI = rdf.createIRI("info:user/bseeger");
 
