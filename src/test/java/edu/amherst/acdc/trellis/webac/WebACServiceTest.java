@@ -109,20 +109,20 @@ public class WebACServiceTest {
         testService.bind(mockResourceService);
         testService.bind(mockAgentService);
 
-        when(mockResourceService.get(any(Session.class), eq(resourceIRI))).thenReturn(of(mockResource));
-        when(mockResourceService.get(any(Session.class), eq(childIRI))).thenReturn(of(mockChildResource));
-        when(mockResourceService.get(any(Session.class), eq(parentIRI))).thenReturn(of(mockParentResource));
-        when(mockResourceService.get(any(Session.class), eq(rootIRI))).thenReturn(of(mockRootResource));
-        when(mockResourceService.get(any(Session.class), eq(publicAclIRI))).thenReturn(of(mockPublicAclResource));
-        when(mockResourceService.get(any(Session.class), eq(privateAclIRI))).thenReturn(of(mockPrivateAclResource));
-        when(mockResourceService.get(any(Session.class), eq(authIRI1))).thenReturn(of(mockAuthResource1));
-        when(mockResourceService.get(any(Session.class), eq(authIRI2))).thenReturn(of(mockAuthResource2));
-        when(mockResourceService.get(any(Session.class), eq(authIRI3))).thenReturn(of(mockAuthResource3));
-        when(mockResourceService.get(any(Session.class), eq(authIRI4))).thenReturn(of(mockAuthResource4));
-        when(mockResourceService.get(any(Session.class), eq(authIRI5))).thenReturn(of(mockAuthResource5));
-        when(mockResourceService.get(any(Session.class), eq(authIRI6))).thenReturn(of(mockAuthResource6));
-        when(mockResourceService.get(any(Session.class), eq(authIRI7))).thenReturn(of(mockAuthResource7));
-        when(mockResourceService.get(any(Session.class), eq(authIRI8))).thenReturn(of(mockAuthResource8));
+        when(mockResourceService.get(eq(resourceIRI))).thenReturn(of(mockResource));
+        when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
+        when(mockResourceService.get(eq(parentIRI))).thenReturn(of(mockParentResource));
+        when(mockResourceService.get(eq(rootIRI))).thenReturn(of(mockRootResource));
+        when(mockResourceService.get(eq(publicAclIRI))).thenReturn(of(mockPublicAclResource));
+        when(mockResourceService.get(eq(privateAclIRI))).thenReturn(of(mockPrivateAclResource));
+        when(mockResourceService.get(eq(authIRI1))).thenReturn(of(mockAuthResource1));
+        when(mockResourceService.get(eq(authIRI2))).thenReturn(of(mockAuthResource2));
+        when(mockResourceService.get(eq(authIRI3))).thenReturn(of(mockAuthResource3));
+        when(mockResourceService.get(eq(authIRI4))).thenReturn(of(mockAuthResource4));
+        when(mockResourceService.get(eq(authIRI5))).thenReturn(of(mockAuthResource5));
+        when(mockResourceService.get(eq(authIRI6))).thenReturn(of(mockAuthResource6));
+        when(mockResourceService.get(eq(authIRI7))).thenReturn(of(mockAuthResource7));
+        when(mockResourceService.get(eq(authIRI8))).thenReturn(of(mockAuthResource8));
 
         when(mockResource.getContainedBy()).thenReturn(of(childIRI));
         when(mockChildResource.getContainedBy()).thenReturn(of(parentIRI));
