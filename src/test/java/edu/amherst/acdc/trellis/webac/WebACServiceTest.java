@@ -124,10 +124,10 @@ public class WebACServiceTest {
         when(mockResourceService.get(eq(authIRI7))).thenReturn(of(mockAuthResource7));
         when(mockResourceService.get(eq(authIRI8))).thenReturn(of(mockAuthResource8));
 
-        when(mockResource.getContainedBy()).thenReturn(of(childIRI));
-        when(mockChildResource.getContainedBy()).thenReturn(of(parentIRI));
-        when(mockParentResource.getContainedBy()).thenReturn(of(rootIRI));
-        when(mockRootResource.getContainedBy()).thenReturn(empty());
+        when(mockResourceService.getContainer(resourceIRI)).thenReturn(of(childIRI));
+        when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
+        when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
+        when(mockResourceService.getContainer(rootIRI)).thenReturn(empty());
 
         when(mockResource.getAcl()).thenReturn(empty());
         when(mockChildResource.getAcl()).thenReturn(of(publicAclIRI));
