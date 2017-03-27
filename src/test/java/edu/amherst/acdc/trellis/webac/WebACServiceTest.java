@@ -330,23 +330,23 @@ public class WebACServiceTest {
 
     @Test
     public void testFindAcl() {
-        assertEquals(of(publicAclIRI), testService.findAclFor(mockSession, resourceIRI));
-        assertEquals(of(publicAclIRI), testService.findAclFor(mockSession, childIRI));
-        assertEquals(of(privateAclIRI), testService.findAclFor(mockSession, parentIRI));
-        assertEquals(of(privateAclIRI), testService.findAclFor(mockSession, rootIRI));
+        assertEquals(of(publicAclIRI), testService.findAclFor(resourceIRI));
+        assertEquals(of(publicAclIRI), testService.findAclFor(childIRI));
+        assertEquals(of(privateAclIRI), testService.findAclFor(parentIRI));
+        assertEquals(of(privateAclIRI), testService.findAclFor(rootIRI));
     }
 
     @Test
     public void testFindAncestor() {
-        assertEquals(of(mockChildResource), testService.findAncestorWithAccessControl(mockSession, resourceIRI));
-        assertEquals(of(mockChildResource), testService.findAncestorWithAccessControl(mockSession, childIRI));
-        assertEquals(of(mockRootResource), testService.findAncestorWithAccessControl(mockSession, parentIRI));
-        assertEquals(of(mockRootResource), testService.findAncestorWithAccessControl(mockSession, rootIRI));
+        assertEquals(of(mockChildResource), testService.findAncestorWithAccessControl(resourceIRI));
+        assertEquals(of(mockChildResource), testService.findAncestorWithAccessControl(childIRI));
+        assertEquals(of(mockRootResource), testService.findAncestorWithAccessControl(parentIRI));
+        assertEquals(of(mockRootResource), testService.findAncestorWithAccessControl(rootIRI));
     }
 
     @Test
     public void testGetAuthorizations() {
-        assertEquals(4, testService.getAuthorizations(mockSession, publicAclIRI).count());
-        assertEquals(3, testService.getAuthorizations(mockSession, privateAclIRI).count());
+        assertEquals(4, testService.getAuthorizations(publicAclIRI).count());
+        assertEquals(3, testService.getAuthorizations(privateAclIRI).count());
     }
 }

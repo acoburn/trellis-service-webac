@@ -97,29 +97,29 @@ public class WebACService implements AccessControlService {
     }
 
     @Override
-    public Optional<IRI> findAclFor(final Session session, final IRI identifier) {
+    public Optional<IRI> findAclFor(final IRI identifier) {
         return getResourceService().flatMap(svc -> {
             final Optional<Resource> res = svc.get(identifier);
             if (res.flatMap(Resource::getAcl).isPresent()) {
                 return res.flatMap(Resource::getAcl);
             }
-            return svc.getContainer(identifier).flatMap(id -> findAclFor(session, id));
+            return svc.getContainer(identifier).flatMap(this::findAclFor);
         });
     }
 
     @Override
-    public Optional<Resource> findAncestorWithAccessControl(final Session session, final IRI identifier) {
+    public Optional<Resource> findAncestorWithAccessControl(final IRI identifier) {
         return getResourceService().flatMap(svc -> {
             final Optional<Resource> res = svc.get(identifier);
             if (res.flatMap(Resource::getAcl).isPresent()) {
                 return res;
             }
-            return svc.getContainer(identifier).flatMap(id -> findAncestorWithAccessControl(session, id));
+            return svc.getContainer(identifier).flatMap(this::findAncestorWithAccessControl);
         });
     }
 
     @Override
-    public Stream<Authorization> getAuthorizations(final Session session, final IRI identifier) {
+    public Stream<Authorization> getAuthorizations(final IRI identifier) {
         return getResourceService().flatMap(svc -> svc.get(identifier)).map(resource ->
             resource.getContains().parallel().unordered()
                 .map(id -> getResourceService().flatMap(svc -> svc.get(id)))
@@ -142,7 +142,7 @@ public class WebACService implements AccessControlService {
         }
 
         return getResourceService().flatMap(svc -> svc.get(identifier))
-                    .map(resource -> getAllAuthorizationsFor(session, resource)
+                    .map(resource -> getAllAuthorizationsFor(resource)
                         .filter(delegateFilter(session).negate())
                         .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
                     .orElse(empty()).peek(auth -> LOGGER.debug(auth.getIdentifier().getIRIString()))
@@ -163,12 +163,14 @@ public class WebACService implements AccessControlService {
         return getAgentService().map(svc -> svc.getGroups(agent).collect(toList())).orElse(emptyList());
     }
 
-    private Stream<Authorization> getAllAuthorizationsFor(final Session session, final Resource resource) {
-        return resource.getAcl().map(acl -> getAuthorizations(session, acl).filter(hasAccess(resource)))
-            .orElseGet(() -> getResourceService().flatMap(svc -> svc.getContainer(resource.getIdentifier()))
-                .flatMap(id -> findAncestorWithAccessControl(session, id))
-                .map(ancestor -> ancestor.getAcl().map(id -> getAuthorizations(session, id)).orElse(empty())
-                    .filter(hasAccess(ancestor))).orElse(empty()));
+    private Stream<Authorization> getAllAuthorizationsFor(final Resource resource) {
+        return resource.getAcl().map(acl -> getAuthorizations(acl).filter(hasAccess(resource)))
+            .orElseGet(() -> getResourceService()
+                .flatMap(svc -> svc.getContainer(resource.getIdentifier()))
+                .flatMap(this::findAncestorWithAccessControl)
+                .map(ancestor -> ancestor.getAcl().map(this::getAuthorizations).orElse(empty())
+                    .filter(hasAccess(ancestor)))
+                .orElse(empty()));
     }
 
     private synchronized Optional<AgentService> getAgentService() {
