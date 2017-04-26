@@ -155,8 +155,7 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {
-        return auth -> session.getDelegatedBy().isPresent() &&
-            !auth.getAgent().contains(session.getDelegatedBy().get());
+        return auth -> session.getDelegatedBy().filter(delegate -> !auth.getAgent().contains(delegate)).isPresent();
     }
 
     private List<IRI> getGroups(final IRI agent) {
