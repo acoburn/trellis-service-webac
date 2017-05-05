@@ -1,6 +1,4 @@
 /*
- * Copyright Amherst College
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.webac;
+package org.trellisldp.webac;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static edu.amherst.acdc.trellis.vocabulary.RDF.type;
+import static org.trellisldp.vocabulary.RDF.type;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -27,14 +25,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
-import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.spi.AccessControlService;
-import edu.amherst.acdc.trellis.spi.AgentService;
-import edu.amherst.acdc.trellis.spi.ResourceService;
-import edu.amherst.acdc.trellis.spi.Session;
-import edu.amherst.acdc.trellis.vocabulary.ACL;
-import edu.amherst.acdc.trellis.vocabulary.PROV;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import org.trellisldp.api.Resource;
+import org.trellisldp.spi.AccessControlService;
+import org.trellisldp.spi.AgentService;
+import org.trellisldp.spi.ResourceService;
+import org.trellisldp.spi.Session;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.PROV;
+import org.trellisldp.vocabulary.Trellis;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.simple.SimpleRDF;

@@ -1,6 +1,4 @@
 /*
- * Copyright Amherst College
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.webac;
+package org.trellisldp.webac;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
@@ -22,14 +20,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import edu.amherst.acdc.trellis.api.Resource;
-import edu.amherst.acdc.trellis.spi.AccessControlService;
-import edu.amherst.acdc.trellis.spi.AgentService;
-import edu.amherst.acdc.trellis.spi.Authorization;
-import edu.amherst.acdc.trellis.spi.ResourceService;
-import edu.amherst.acdc.trellis.spi.Session;
-import edu.amherst.acdc.trellis.vocabulary.ACL;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import org.trellisldp.api.Resource;
+import org.trellisldp.spi.AccessControlService;
+import org.trellisldp.spi.AgentService;
+import org.trellisldp.spi.Authorization;
+import org.trellisldp.spi.ResourceService;
+import org.trellisldp.spi.Session;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.Trellis;
 
 import java.util.List;
 import java.util.Objects;
