@@ -30,7 +30,6 @@ import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.Trellis;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
@@ -60,38 +59,18 @@ public class WebACService implements AccessControlService {
                 resource.getTypes().anyMatch(authorization.getAccessToClass()::contains);
     }
 
-    private ResourceService service;
+    private final ResourceService service;
 
-    private AgentService agentSvc;
+    private final AgentService agentSvc;
 
-    @Override
-    public synchronized void bind(final ResourceService service) {
-        requireNonNull(service, "A non-null ResourceService must be provided!");
-        LOGGER.info("Binding ResourceService to the AuthorizationService");
-        this.service = service;
-    }
-
-    @Override
-    public synchronized void unbind(final ResourceService service) {
-        if (Objects.equals(this.service, service)) {
-            LOGGER.info("Unbinding ResourceService to the AuthorizationService");
-            this.service = null;
-        }
-    }
-
-    @Override
-    public synchronized void bind(final AgentService service) {
-        requireNonNull(service, "A non-null AgentService must be provided!");
-        LOGGER.info("Binding AgentService to the AuthorizationService");
-        this.agentSvc = service;
-    }
-
-    @Override
-    public synchronized void unbind(final AgentService service) {
-        if (Objects.equals(this.agentSvc, service)) {
-            LOGGER.info("Unbinding AgentService to the AuthorizationService");
-            this.agentSvc = null;
-        }
+    /**
+     * Create a WebAC-base authorization service
+     * @param resourceService the resource service
+     * @param agentService the agent service
+     */
+    public WebACService(final ResourceService resourceService, final AgentService agentService) {
+        this.service = resourceService;
+        this.agentSvc = agentService;
     }
 
     @Override
@@ -170,11 +149,11 @@ public class WebACService implements AccessControlService {
                 .orElse(empty()));
     }
 
-    private synchronized Optional<AgentService> getAgentService() {
+    private Optional<AgentService> getAgentService() {
         return ofNullable(agentSvc);
     }
 
-    private synchronized Optional<ResourceService> getResourceService() {
+    private Optional<ResourceService> getResourceService() {
         return ofNullable(service);
     }
 }

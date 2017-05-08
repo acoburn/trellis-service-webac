@@ -66,7 +66,7 @@ public class WebACServiceTest {
                 mockAuthResource2, mockAuthResource3, mockAuthResource4, mockAuthResource5,
                 mockAuthResource6, mockAuthResource7, mockAuthResource8;
 
-    private final AccessControlService testService = new WebACService();
+    private AccessControlService testService;
 
     private final IRI resourceIRI = rdf.createIRI("trellis:repository/parent/child/resource");
 
@@ -104,8 +104,7 @@ public class WebACServiceTest {
 
     @Before
     public void setUp() {
-        testService.bind(mockResourceService);
-        testService.bind(mockAgentService);
+        testService = new WebACService(mockResourceService, mockAgentService);
 
         when(mockResourceService.get(eq(resourceIRI))).thenReturn(of(mockResource));
         when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
