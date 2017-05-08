@@ -20,15 +20,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import org.trellisldp.api.Resource;
-import org.trellisldp.spi.AccessControlService;
-import org.trellisldp.spi.AgentService;
-import org.trellisldp.spi.Authorization;
-import org.trellisldp.spi.ResourceService;
-import org.trellisldp.spi.Session;
-import org.trellisldp.vocabulary.ACL;
-import org.trellisldp.vocabulary.Trellis;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -40,6 +31,15 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
+
+import org.trellisldp.api.Resource;
+import org.trellisldp.spi.AccessControlService;
+import org.trellisldp.spi.AgentService;
+import org.trellisldp.spi.Authorization;
+import org.trellisldp.spi.ResourceService;
+import org.trellisldp.spi.Session;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.Trellis;
 
 /**
  *
