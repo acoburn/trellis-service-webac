@@ -19,17 +19,16 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Quad;
-import org.apache.commons.rdf.api.RDF;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.Resource;
@@ -48,8 +47,6 @@ import org.trellisldp.vocabulary.Trellis;
 public class WebACService implements AccessControlService {
 
     private static final Logger LOGGER = getLogger(WebACService.class);
-
-    private static final RDF rdf = ServiceLoader.load(RDF.class).iterator().next();
 
     private static final Predicate<Resource> isAuthorization = resource ->
         resource.getTypes().anyMatch(ACL.Authorization::equals);
@@ -101,7 +98,7 @@ public class WebACService implements AccessControlService {
             resource.getContains().parallel().unordered()
                 .map(id -> getResourceService().flatMap(svc -> svc.get(id)))
                 .filter(Optional::isPresent).map(Optional::get).filter(isAuthorization).map(auth -> {
-                    final Graph graph = rdf.createGraph();
+                    final Graph graph = getInstance().createGraph();
                     auth.stream().filter(quad -> quad.getGraphName().filter(Trellis.PreferUserManaged::equals)
                             .isPresent() && quad.getPredicate().getIRIString().startsWith(ACL.uri))
                         .map(Quad::asTriple).forEach(graph::add);
