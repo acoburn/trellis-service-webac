@@ -19,8 +19,8 @@ import static org.trellisldp.vocabulary.RDF.type;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
@@ -41,7 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 /**
  * @author acoburn
@@ -122,19 +122,14 @@ public class WebACServiceTest {
         when(mockResourceService.get(eq(authIRI8))).thenReturn(of(mockAuthResource8));
 
         when(mockResourceService.getContainer(resourceIRI)).thenReturn(of(childIRI));
-        when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
         when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
-        when(mockResourceService.getContainer(rootIRI)).thenReturn(empty());
 
         when(mockResource.getAcl()).thenReturn(empty());
         when(mockChildResource.getAcl()).thenReturn(of(publicAclIRI));
         when(mockParentResource.getAcl()).thenReturn(empty());
         when(mockRootResource.getAcl()).thenReturn(of(privateAclIRI));
 
-        when(mockResource.getTypes()).thenAnswer(inv -> Stream.empty());
         when(mockChildResource.getTypes()).thenAnswer(inv -> Stream.empty());
-        when(mockParentResource.getTypes()).thenAnswer(inv -> Stream.empty());
-        when(mockRootResource.getTypes()).thenAnswer(inv -> Stream.empty());
 
         when(mockResource.getIdentifier()).thenReturn(resourceIRI);
         when(mockChildResource.getIdentifier()).thenReturn(childIRI);
@@ -191,12 +186,7 @@ public class WebACServiceTest {
                 rdf.createQuad(Trellis.PreferUserManaged, authIRI6, ACL.accessTo, rootIRI),
                 rdf.createQuad(Trellis.PreferUserManaged, authIRI6, ACL.mode, ACL.Append)));
 
-        when(mockAuthResource7.getIdentifier()).thenReturn(authIRI7);
         when(mockAuthResource7.getTypes()).thenAnswer(inv -> Stream.empty());
-        when(mockAuthResource7.stream()).thenAnswer(inv -> Stream.of(
-                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.agent, acoburnIRI),
-                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.accessTo, rootIRI),
-                rdf.createQuad(Trellis.PreferUserManaged, authIRI7, ACL.mode, ACL.Read)));
 
         when(mockAuthResource8.getIdentifier()).thenReturn(authIRI8);
         when(mockAuthResource8.getTypes()).thenAnswer(inv -> Stream.of(ACL.Authorization));
