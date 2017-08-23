@@ -67,6 +67,8 @@ public class WebACServiceTest {
 
     private AccessControlService testService;
 
+    private final static IRI nonexistentIRI = rdf.createIRI("trellis:repository/parent/child/nonexistent");
+
     private final static IRI resourceIRI = rdf.createIRI("trellis:repository/parent/child/resource");
 
     private final static IRI childIRI = rdf.createIRI("trellis:repository/parent/child");
@@ -147,10 +149,12 @@ public class WebACServiceTest {
                 rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
                 rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
 
+        when(mockResourceService.get(eq(nonexistentIRI))).thenReturn(empty());
         when(mockResourceService.get(eq(resourceIRI))).thenReturn(of(mockResource));
         when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
         when(mockResourceService.get(eq(parentIRI))).thenReturn(of(mockParentResource));
         when(mockResourceService.get(eq(rootIRI))).thenReturn(of(mockRootResource));
+        when(mockResourceService.getContainer(nonexistentIRI)).thenReturn(of(childIRI));
         when(mockResourceService.getContainer(resourceIRI)).thenReturn(of(childIRI));
         when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
         when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
@@ -173,6 +177,7 @@ public class WebACServiceTest {
     @Test
     public void testCanRead1() {
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        assertFalse(testService.canRead(mockSession, nonexistentIRI));
         assertFalse(testService.canRead(mockSession, resourceIRI));
         assertFalse(testService.canRead(mockSession, childIRI));
         assertFalse(testService.canRead(mockSession, parentIRI));
@@ -182,6 +187,7 @@ public class WebACServiceTest {
     @Test
     public void testCanRead2() {
         when(mockSession.getAgent()).thenReturn(bseegerIRI);
+        assertTrue(testService.canRead(mockSession, nonexistentIRI));
         assertTrue(testService.canRead(mockSession, resourceIRI));
         assertTrue(testService.canRead(mockSession, childIRI));
         assertTrue(testService.canRead(mockSession, parentIRI));
@@ -191,6 +197,7 @@ public class WebACServiceTest {
     @Test
     public void testCanRead3() {
         when(mockSession.getAgent()).thenReturn(agentIRI);
+        assertTrue(testService.canRead(mockSession, nonexistentIRI));
         assertTrue(testService.canRead(mockSession, resourceIRI));
         assertTrue(testService.canRead(mockSession, childIRI));
         assertTrue(testService.canRead(mockSession, parentIRI));
@@ -200,6 +207,7 @@ public class WebACServiceTest {
     @Test
     public void testCanWrite1() {
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        assertFalse(testService.canWrite(mockSession, nonexistentIRI));
         assertFalse(testService.canWrite(mockSession, resourceIRI));
         assertFalse(testService.canWrite(mockSession, childIRI));
         assertFalse(testService.canWrite(mockSession, parentIRI));
@@ -209,6 +217,7 @@ public class WebACServiceTest {
     @Test
     public void testCanWrite2() {
         when(mockSession.getAgent()).thenReturn(bseegerIRI);
+        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
         assertTrue(testService.canWrite(mockSession, resourceIRI));
         assertTrue(testService.canWrite(mockSession, childIRI));
         assertFalse(testService.canWrite(mockSession, parentIRI));
@@ -218,6 +227,7 @@ public class WebACServiceTest {
     @Test
     public void testCanWrite3() {
         when(mockSession.getAgent()).thenReturn(agentIRI);
+        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
         assertTrue(testService.canWrite(mockSession, resourceIRI));
         assertTrue(testService.canWrite(mockSession, childIRI));
         assertTrue(testService.canWrite(mockSession, parentIRI));
@@ -227,6 +237,7 @@ public class WebACServiceTest {
     @Test
     public void testCanControl1() {
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        assertFalse(testService.canWrite(mockSession, nonexistentIRI));
         assertFalse(testService.canControl(mockSession, resourceIRI));
         assertFalse(testService.canControl(mockSession, childIRI));
         assertFalse(testService.canControl(mockSession, parentIRI));
@@ -236,6 +247,7 @@ public class WebACServiceTest {
     @Test
     public void testCanControl2() {
         when(mockSession.getAgent()).thenReturn(bseegerIRI);
+        assertTrue(testService.canControl(mockSession, nonexistentIRI));
         assertTrue(testService.canControl(mockSession, resourceIRI));
         assertTrue(testService.canControl(mockSession, childIRI));
         assertFalse(testService.canControl(mockSession, parentIRI));
@@ -245,6 +257,7 @@ public class WebACServiceTest {
     @Test
     public void testCanControl3() {
         when(mockSession.getAgent()).thenReturn(agentIRI);
+        assertTrue(testService.canControl(mockSession, nonexistentIRI));
         assertTrue(testService.canControl(mockSession, resourceIRI));
         assertTrue(testService.canControl(mockSession, childIRI));
         assertFalse(testService.canControl(mockSession, parentIRI));
@@ -254,6 +267,7 @@ public class WebACServiceTest {
     @Test
     public void testCanAppend1() {
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        assertFalse(testService.canAppend(mockSession, nonexistentIRI));
         assertFalse(testService.canAppend(mockSession, resourceIRI));
         assertFalse(testService.canAppend(mockSession, childIRI));
         assertTrue(testService.canAppend(mockSession, parentIRI));
@@ -263,6 +277,7 @@ public class WebACServiceTest {
     @Test
     public void testCanAppend2() {
         when(mockSession.getAgent()).thenReturn(bseegerIRI);
+        assertFalse(testService.canAppend(mockSession, nonexistentIRI));
         assertFalse(testService.canAppend(mockSession, resourceIRI));
         assertFalse(testService.canAppend(mockSession, childIRI));
         assertTrue(testService.canAppend(mockSession, parentIRI));
@@ -272,6 +287,7 @@ public class WebACServiceTest {
     @Test
     public void testCanAppend3() {
         when(mockSession.getAgent()).thenReturn(agentIRI);
+        assertFalse(testService.canAppend(mockSession, nonexistentIRI));
         assertFalse(testService.canAppend(mockSession, resourceIRI));
         assertFalse(testService.canAppend(mockSession, childIRI));
         assertFalse(testService.canAppend(mockSession, parentIRI));
@@ -281,18 +297,22 @@ public class WebACServiceTest {
     @Test
     public void testAdmin1() {
         when(mockSession.getAgent()).thenReturn(Trellis.RepositoryAdministrator);
+        assertTrue(testService.canAppend(mockSession, nonexistentIRI));
         assertTrue(testService.canAppend(mockSession, resourceIRI));
         assertTrue(testService.canAppend(mockSession, childIRI));
         assertTrue(testService.canAppend(mockSession, parentIRI));
         assertTrue(testService.canAppend(mockSession, rootIRI));
+        assertTrue(testService.canControl(mockSession, nonexistentIRI));
         assertTrue(testService.canControl(mockSession, resourceIRI));
         assertTrue(testService.canControl(mockSession, childIRI));
         assertTrue(testService.canControl(mockSession, parentIRI));
         assertTrue(testService.canControl(mockSession, rootIRI));
+        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
         assertTrue(testService.canWrite(mockSession, resourceIRI));
         assertTrue(testService.canWrite(mockSession, childIRI));
         assertTrue(testService.canWrite(mockSession, parentIRI));
         assertTrue(testService.canWrite(mockSession, rootIRI));
+        assertTrue(testService.canRead(mockSession, nonexistentIRI));
         assertTrue(testService.canRead(mockSession, resourceIRI));
         assertTrue(testService.canRead(mockSession, childIRI));
         assertTrue(testService.canRead(mockSession, parentIRI));
@@ -304,18 +324,22 @@ public class WebACServiceTest {
         when(mockSession.getAgent()).thenReturn(agentIRI);
         when(mockAgentService.isAdmin(eq(agentIRI))).thenReturn(true);
 
+        assertTrue(testService.canAppend(mockSession, nonexistentIRI));
         assertTrue(testService.canAppend(mockSession, resourceIRI));
         assertTrue(testService.canAppend(mockSession, childIRI));
         assertTrue(testService.canAppend(mockSession, parentIRI));
         assertTrue(testService.canAppend(mockSession, rootIRI));
+        assertTrue(testService.canControl(mockSession, nonexistentIRI));
         assertTrue(testService.canControl(mockSession, resourceIRI));
         assertTrue(testService.canControl(mockSession, childIRI));
         assertTrue(testService.canControl(mockSession, parentIRI));
         assertTrue(testService.canControl(mockSession, rootIRI));
+        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
         assertTrue(testService.canWrite(mockSession, resourceIRI));
         assertTrue(testService.canWrite(mockSession, childIRI));
         assertTrue(testService.canWrite(mockSession, parentIRI));
         assertTrue(testService.canWrite(mockSession, rootIRI));
+        assertTrue(testService.canRead(mockSession, nonexistentIRI));
         assertTrue(testService.canRead(mockSession, resourceIRI));
         assertTrue(testService.canRead(mockSession, childIRI));
         assertTrue(testService.canRead(mockSession, parentIRI));
