@@ -30,12 +30,11 @@ import org.trellisldp.spi.AgentService;
 import org.trellisldp.spi.ResourceService;
 import org.trellisldp.spi.Session;
 import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.PROV;
 import org.trellisldp.vocabulary.Trellis;
-import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.api.Triple;
-import org.apache.commons.rdf.simple.SimpleRDF;
+import org.apache.commons.rdf.jena.JenaRDF;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +48,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class WebACServiceTest {
 
-    private static final RDF rdf = new SimpleRDF();
+    private static final RDF rdf = new JenaRDF();
 
     @Mock
     private ResourceService mockResourceService;
@@ -98,56 +97,55 @@ public class WebACServiceTest {
 
     private final static IRI agentIRI = rdf.createIRI("info:user/agent");
 
-    private static Graph getGraph1() {
-        final Graph graph1 = rdf.createGraph();
-        graph1.add(rdf.createTriple(authIRI1, type, ACL.Authorization));
-        graph1.add(rdf.createTriple(authIRI1, ACL.mode, ACL.Read));
-        graph1.add(rdf.createTriple(authIRI1, ACL.agent, bseegerIRI));
-        graph1.add(rdf.createTriple(authIRI1, ACL.accessTo, childIRI));
-
-        graph1.add(rdf.createTriple(authIRI2, type, ACL.Authorization));
-        graph1.add(rdf.createTriple(authIRI2, ACL.mode, ACL.Read));
-        graph1.add(rdf.createTriple(authIRI2, ACL.mode, ACL.Write));
-        graph1.add(rdf.createTriple(authIRI2, ACL.mode, ACL.Control));
-        graph1.add(rdf.createTriple(authIRI2, ACL.agent, bseegerIRI));
-        graph1.add(rdf.createTriple(authIRI2, ACL.agent, agentIRI));
-        graph1.add(rdf.createTriple(authIRI2, ACL.accessTo, childIRI));
-
-        graph1.add(rdf.createTriple(authIRI4, ACL.agent, agentIRI));
-        graph1.add(rdf.createTriple(authIRI4, type, ACL.Authorization));
-        return graph1;
-    }
-
-    private static Graph getGraph2() {
-        final Graph graph2 = rdf.createGraph();
-        graph2.add(rdf.createTriple(authIRI5, type, ACL.Authorization));
-        graph2.add(rdf.createTriple(authIRI5, ACL.accessTo, rootIRI));
-        graph2.add(rdf.createTriple(authIRI5, ACL.agent, bseegerIRI));
-        graph2.add(rdf.createTriple(authIRI5, ACL.mode, ACL.Read));
-        graph2.add(rdf.createTriple(authIRI5, ACL.mode, ACL.Append));
-
-        graph2.add(rdf.createTriple(authIRI6, type, ACL.Authorization));
-        graph2.add(rdf.createTriple(authIRI6, ACL.agent, acoburnIRI));
-        graph2.add(rdf.createTriple(authIRI6, ACL.accessTo, rootIRI));
-        graph2.add(rdf.createTriple(authIRI6, ACL.mode, ACL.Append));
-
-        graph2.add(rdf.createTriple(authIRI8, type, ACL.Authorization));
-        graph2.add(rdf.createTriple(authIRI8, ACL.agent, agentIRI));
-        graph2.add(rdf.createTriple(authIRI8, ACL.accessTo, rootIRI));
-        graph2.add(rdf.createTriple(authIRI8, ACL.mode, ACL.Read));
-        graph2.add(rdf.createTriple(authIRI8, ACL.mode, ACL.Write));
-        return graph2;
-    }
+    private final static IRI groupIRI = rdf.createIRI("info:group/test");
 
     @Before
     public void setUp() {
 
         testService = new WebACService(mockResourceService, mockAgentService);
 
-        when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv ->
-                getGraph1().stream().map(t -> (Triple)t));
-        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv ->
-                getGraph2().stream().map(t -> (Triple)t));
+        when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI1, type, ACL.Authorization),
+                rdf.createTriple(authIRI1, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI1, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI1, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI2, type, ACL.Authorization),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI2, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI2, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI2, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI3, type, PROV.Activity),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI3, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI3, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI3, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI4, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI4, type, ACL.Authorization)));
+
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, type, ACL.Authorization),
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI6, type, ACL.Authorization),
+                rdf.createTriple(authIRI6, ACL.agent, acoburnIRI),
+                rdf.createTriple(authIRI6, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI6, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI8, type, ACL.Authorization),
+                rdf.createTriple(authIRI8, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
 
         when(mockResourceService.get(eq(resourceIRI))).thenReturn(of(mockResource));
         when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
@@ -278,5 +276,202 @@ public class WebACServiceTest {
         assertFalse(testService.canAppend(mockSession, childIRI));
         assertFalse(testService.canAppend(mockSession, parentIRI));
         assertFalse(testService.canAppend(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testAdmin1() {
+        when(mockSession.getAgent()).thenReturn(Trellis.RepositoryAdministrator);
+        assertTrue(testService.canAppend(mockSession, resourceIRI));
+        assertTrue(testService.canAppend(mockSession, childIRI));
+        assertTrue(testService.canAppend(mockSession, parentIRI));
+        assertTrue(testService.canAppend(mockSession, rootIRI));
+        assertTrue(testService.canControl(mockSession, resourceIRI));
+        assertTrue(testService.canControl(mockSession, childIRI));
+        assertTrue(testService.canControl(mockSession, parentIRI));
+        assertTrue(testService.canControl(mockSession, rootIRI));
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertTrue(testService.canWrite(mockSession, parentIRI));
+        assertTrue(testService.canWrite(mockSession, rootIRI));
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertTrue(testService.canRead(mockSession, parentIRI));
+        assertTrue(testService.canRead(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testAdmin2() {
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+        when(mockAgentService.isAdmin(eq(agentIRI))).thenReturn(true);
+
+        assertTrue(testService.canAppend(mockSession, resourceIRI));
+        assertTrue(testService.canAppend(mockSession, childIRI));
+        assertTrue(testService.canAppend(mockSession, parentIRI));
+        assertTrue(testService.canAppend(mockSession, rootIRI));
+        assertTrue(testService.canControl(mockSession, resourceIRI));
+        assertTrue(testService.canControl(mockSession, childIRI));
+        assertTrue(testService.canControl(mockSession, parentIRI));
+        assertTrue(testService.canControl(mockSession, rootIRI));
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertTrue(testService.canWrite(mockSession, parentIRI));
+        assertTrue(testService.canWrite(mockSession, rootIRI));
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertTrue(testService.canRead(mockSession, parentIRI));
+        assertTrue(testService.canRead(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testDelegate1() {
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+        when(mockSession.getDelegatedBy()).thenReturn(of(acoburnIRI));
+
+        assertFalse(testService.canRead(mockSession, resourceIRI));
+        assertFalse(testService.canRead(mockSession, childIRI));
+        assertFalse(testService.canRead(mockSession, parentIRI));
+        assertFalse(testService.canRead(mockSession, rootIRI));
+
+        assertFalse(testService.canWrite(mockSession, resourceIRI));
+        assertFalse(testService.canWrite(mockSession, childIRI));
+        assertFalse(testService.canWrite(mockSession, parentIRI));
+        assertFalse(testService.canWrite(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testDelegate2() {
+        when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        when(mockSession.getDelegatedBy()).thenReturn(of(agentIRI));
+
+        assertFalse(testService.canRead(mockSession, resourceIRI));
+        assertFalse(testService.canRead(mockSession, childIRI));
+        assertFalse(testService.canRead(mockSession, parentIRI));
+        assertFalse(testService.canRead(mockSession, rootIRI));
+
+        assertFalse(testService.canWrite(mockSession, resourceIRI));
+        assertFalse(testService.canWrite(mockSession, childIRI));
+        assertFalse(testService.canWrite(mockSession, parentIRI));
+        assertFalse(testService.canWrite(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testDelegate3() {
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+        when(mockSession.getDelegatedBy()).thenReturn(of(bseegerIRI));
+
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertFalse(testService.canWrite(mockSession, parentIRI));
+        assertFalse(testService.canWrite(mockSession, rootIRI));
+
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertFalse(testService.canRead(mockSession, parentIRI));
+        assertFalse(testService.canRead(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testDefaultForNew() {
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, type, ACL.Authorization),
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI6, type, ACL.Authorization),
+                rdf.createTriple(authIRI6, ACL.agent, acoburnIRI),
+                rdf.createTriple(authIRI6, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI6, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI8, type, ACL.Authorization),
+                rdf.createTriple(authIRI8, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI8, ACL.default_, rootIRI),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
+
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertTrue(testService.canWrite(mockSession, parentIRI));
+        assertTrue(testService.canWrite(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testNotInherited() {
+        when(mockParentResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                    rdf.createTriple(authIRI5, type, ACL.Authorization),
+                    rdf.createTriple(authIRI5, ACL.accessTo, parentIRI),
+                    rdf.createTriple(authIRI5, ACL.agent, agentIRI),
+                    rdf.createTriple(authIRI5, ACL.mode, ACL.Read)));
+
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, type, ACL.Authorization),
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI6, type, ACL.Authorization),
+                rdf.createTriple(authIRI6, ACL.agent, acoburnIRI),
+                rdf.createTriple(authIRI6, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI6, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI8, type, ACL.Authorization),
+                rdf.createTriple(authIRI8, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI8, ACL.default_, rootIRI),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
+
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertFalse(testService.canWrite(mockSession, parentIRI));
+        assertTrue(testService.canWrite(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testGroup() {
+        when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        when(mockAgentService.getGroups(eq(acoburnIRI))).thenAnswer(inv -> Stream.of(groupIRI));
+        when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI2, type, ACL.Authorization),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI2, ACL.agentGroup, groupIRI),
+                rdf.createTriple(authIRI2, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI3, type, PROV.Activity),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI3, ACL.agentGroup, groupIRI),
+                rdf.createTriple(authIRI3, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI4, ACL.agentGroup, groupIRI),
+                rdf.createTriple(authIRI4, type, ACL.Authorization)));
+
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, type, ACL.Authorization),
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI8, type, ACL.Authorization),
+                rdf.createTriple(authIRI8, ACL.agentGroup, groupIRI),
+                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
+
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertTrue(testService.canRead(mockSession, parentIRI));
+        assertTrue(testService.canRead(mockSession, rootIRI));
     }
 }

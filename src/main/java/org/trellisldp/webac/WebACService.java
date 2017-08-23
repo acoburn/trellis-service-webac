@@ -15,18 +15,15 @@ package org.trellisldp.webac;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.apache.commons.rdf.api.BlankNodeOrIRI;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -75,12 +72,10 @@ public class WebACService implements AccessControlService {
             return true;
         }
 
-        return resourceService.get(identifier)
-            .map(resource -> getAllAuthorizationsFor(resource, true)
-                        .filter(delegateFilter(session).negate())
-                        .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
-                    .orElse(empty()).peek(auth -> LOGGER.warn("Applying Auth: " + auth.getIdentifier()))
-                    .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+        return resourceService.get(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
+                .filter(delegateFilter(session).negate())
+                .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
+            .orElse(empty()).anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
@@ -105,24 +100,22 @@ public class WebACService implements AccessControlService {
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource, final Boolean top) {
-        final List<Triple> triples = resource.stream(Trellis.PreferAccessControl).collect(toList());
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
+        final Graph graph = getInstance().createGraph();
+        resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
 
-        if (triples.size() == 0) {
+        if (graph.size() == 0) {
             // Nothing here, check the parent
             return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
                 .orElse(Stream.empty());
         }
 
-        final Set<BlankNodeOrIRI> subjects = triples.stream()
-            .filter(t -> RDF.type.equals(t.getPredicate()) && ACL.Authorization.equals(t.getObject()))
-            .map(Triple::getSubject).collect(toSet());
-
-        final List<Authorization> authorizations = subjects.stream().map(subject -> {
-            final Graph authGraph = getInstance().createGraph();
-            triples.stream().filter(t -> subject.equals(t.getSubject())).forEach(authGraph::add);
-            return Authorization.from(subject, authGraph);
-        }).collect(toList());
+        final List<Authorization> authorizations = graph.stream(null, RDF.type, ACL.Authorization)
+            .map(Triple::getSubject).distinct().map(subject -> {
+                final Graph authGraph = getInstance().createGraph();
+                graph.stream(subject, null, null).forEach(authGraph::add);
+                return Authorization.from(subject, authGraph);
+            }).collect(toList());
 
         if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
             return authorizations.stream().filter(getInheritedAuth(resource.getIdentifier()));
