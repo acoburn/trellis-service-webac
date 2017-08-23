@@ -75,7 +75,9 @@ public class WebACService implements AccessControlService {
         return resourceService.get(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
                 .filter(delegateFilter(session).negate())
                 .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
-            .orElse(empty()).anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+            .orElse(empty())
+            .peek(auth -> LOGGER.debug("Applying Authorization {} to {}", auth.getIdentifier(), identifier))
+            .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
