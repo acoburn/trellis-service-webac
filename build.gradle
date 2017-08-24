@@ -97,6 +97,7 @@ jar {
         vendor project.vendor
         license project.license
 
+        instruction 'Automatic-Module-Name', 'org.trellisldp.webac'
         instruction 'Import-Package', '*'
         instruction 'Export-Package', "org.trellisldp.webac;version=${projectOsgiVersion}"
     }
