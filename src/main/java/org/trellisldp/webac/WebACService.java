@@ -34,6 +34,7 @@ import org.trellisldp.spi.AccessControlService;
 import org.trellisldp.spi.AgentService;
 import org.trellisldp.spi.Authorization;
 import org.trellisldp.spi.ResourceService;
+import org.trellisldp.spi.RuntimeRepositoryException;
 import org.trellisldp.spi.Session;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.RDF;
@@ -109,27 +110,37 @@ public class WebACService implements AccessControlService {
         return auth -> auth.getAccessTo().contains(identifier);
     }
 
+    private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
+        return graph.stream(null, RDF.type, ACL.Authorization).map(Triple::getSubject).distinct().map(subject -> {
+                try (final Graph authGraph = getInstance().createGraph()) {
+                    graph.stream(subject, null, null).forEach(authGraph::add);
+                    return Authorization.from(subject, authGraph);
+                } catch (final Exception ex) {
+                    throw new RuntimeRepositoryException("Error Processing graph", ex);
+                }
+            }).collect(toList());
+    }
+
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource, final Boolean top) {
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
-        final Graph graph = getInstance().createGraph();
-        resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
 
-        if (graph.size() == 0) {
-            // Nothing here, check the parent
-            return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
-                .orElse(Stream.empty());
+        try (final Graph graph = getInstance().createGraph()) {
+            resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
+
+            if (graph.size() == 0) {
+                // Nothing here, check the parent
+                return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
+                    .orElse(Stream.empty());
+            }
+
+            final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
+
+            if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
+                return authorizations.stream().filter(getInheritedAuth(resource.getIdentifier()));
+            }
+            return authorizations.stream().filter(getAccessToAuth(resource.getIdentifier()));
+        } catch (final Exception ex) {
+            throw new RuntimeRepositoryException(ex);
         }
-
-        final List<Authorization> authorizations = graph.stream(null, RDF.type, ACL.Authorization)
-            .map(Triple::getSubject).distinct().map(subject -> {
-                final Graph authGraph = getInstance().createGraph();
-                graph.stream(subject, null, null).forEach(authGraph::add);
-                return Authorization.from(subject, authGraph);
-            }).collect(toList());
-
-        if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
-            return authorizations.stream().filter(getInheritedAuth(resource.getIdentifier()));
-        }
-        return authorizations.stream().filter(getAccessToAuth(resource.getIdentifier()));
     }
 }
