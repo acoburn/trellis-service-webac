@@ -161,9 +161,12 @@ public class WebACServiceTest {
         when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
         when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
 
+        when(mockResource.getIdentifier()).thenReturn(resourceIRI);
         when(mockChildResource.getIdentifier()).thenReturn(childIRI);
         when(mockParentResource.getIdentifier()).thenReturn(parentIRI);
         when(mockRootResource.getIdentifier()).thenReturn(rootIRI);
+        when(mockResource.hasAcl()).thenReturn(false);
+        when(mockParentResource.hasAcl()).thenReturn(false);
 
         when(mockAgentService.isAdmin(any(IRI.class))).thenReturn(false);
         when(mockAgentService.getGroups(any(IRI.class))).thenAnswer(inv -> Stream.empty());

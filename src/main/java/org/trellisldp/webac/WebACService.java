@@ -73,20 +73,20 @@ public class WebACService implements AccessControlService {
             return true;
         }
 
-        return getNearestAclResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
+        return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
                 .filter(delegateFilter(session).negate())
                 .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
-            .orElse(empty())
+            .orElseGet(Stream::empty)
             .peek(auth -> LOGGER.debug("Applying Authorization {} to {}", auth.getIdentifier(), identifier))
             .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
     }
 
-    private Optional<Resource> getNearestAclResource(final IRI identifier) {
+    private Optional<Resource> getNearestResource(final IRI identifier) {
         final Optional<Resource> res = resourceService.get(identifier);
-        if (res.filter(Resource::hasAcl).isPresent()) {
+        if (res.isPresent()) {
             return res;
         }
-        return resourceService.getContainer(identifier).flatMap(this::getNearestAclResource);
+        return resourceService.getContainer(identifier).flatMap(this::getNearestResource);
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
@@ -122,25 +122,25 @@ public class WebACService implements AccessControlService {
     }
 
     private Stream<Authorization> getAllAuthorizationsFor(final Resource resource, final Boolean top) {
+        LOGGER.debug("Checking ACL for: {}", resource.getIdentifier());
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
+        if (resource.hasAcl()) {
+            try (final Graph graph = getInstance().createGraph()) {
+                resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
 
-        try (final Graph graph = getInstance().createGraph()) {
-            resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
+                final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
 
-            if (graph.size() == 0) {
-                // Nothing here, check the parent
-                return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
-                    .orElse(Stream.empty());
+                if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
+                    return authorizations.stream().filter(getInheritedAuth(resource.getIdentifier()));
+                }
+                return authorizations.stream().filter(getAccessToAuth(resource.getIdentifier()));
+            } catch (final Exception ex) {
+                throw new RuntimeRepositoryException(ex);
             }
-
-            final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
-
-            if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
-                return authorizations.stream().filter(getInheritedAuth(resource.getIdentifier()));
-            }
-            return authorizations.stream().filter(getAccessToAuth(resource.getIdentifier()));
-        } catch (final Exception ex) {
-            throw new RuntimeRepositoryException(ex);
         }
+        // Nothing here, check the parent
+        LOGGER.debug("No ACL for {}; looking up parent resource", resource.getIdentifier());
+        return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
+            .orElseGet(Stream::empty);
     }
 }
