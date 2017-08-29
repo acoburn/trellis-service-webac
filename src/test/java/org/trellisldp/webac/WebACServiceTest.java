@@ -106,6 +106,7 @@ public class WebACServiceTest {
 
         testService = new WebACService(mockResourceService, mockAgentService);
 
+        when(mockChildResource.hasAcl()).thenReturn(true);
         when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
                 rdf.createTriple(authIRI1, type, ACL.Authorization),
                 rdf.createTriple(authIRI1, ACL.mode, ACL.Read),
@@ -131,6 +132,7 @@ public class WebACServiceTest {
                 rdf.createTriple(authIRI4, ACL.agent, agentIRI),
                 rdf.createTriple(authIRI4, type, ACL.Authorization)));
 
+        when(mockRootResource.hasAcl()).thenReturn(true);
         when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
                 rdf.createTriple(authIRI5, type, ACL.Authorization),
                 rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
@@ -159,10 +161,6 @@ public class WebACServiceTest {
         when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
         when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
 
-        when(mockResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.empty());
-        when(mockParentResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.empty());
-
-        when(mockResource.getIdentifier()).thenReturn(resourceIRI);
         when(mockChildResource.getIdentifier()).thenReturn(childIRI);
         when(mockParentResource.getIdentifier()).thenReturn(parentIRI);
         when(mockRootResource.getIdentifier()).thenReturn(rootIRI);
@@ -425,6 +423,7 @@ public class WebACServiceTest {
 
     @Test
     public void testNotInherited() {
+        when(mockParentResource.hasAcl()).thenReturn(true);
         when(mockParentResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
                     rdf.createTriple(authIRI5, type, ACL.Authorization),
                     rdf.createTriple(authIRI5, ACL.accessTo, parentIRI),

@@ -73,7 +73,7 @@ public class WebACService implements AccessControlService {
             return true;
         }
 
-        return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
+        return getNearestAclResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
                 .filter(delegateFilter(session).negate())
                 .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
             .orElse(empty())
@@ -81,12 +81,12 @@ public class WebACService implements AccessControlService {
             .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
     }
 
-    private Optional<Resource> getNearestResource(final IRI identifier) {
+    private Optional<Resource> getNearestAclResource(final IRI identifier) {
         final Optional<Resource> res = resourceService.get(identifier);
-        if (res.isPresent()) {
+        if (res.filter(Resource::hasAcl).isPresent()) {
             return res;
         }
-        return resourceService.getContainer(identifier).flatMap(this::getNearestResource);
+        return resourceService.getContainer(identifier).flatMap(this::getNearestAclResource);
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
