@@ -37,6 +37,7 @@ import org.trellisldp.spi.ResourceService;
 import org.trellisldp.spi.RuntimeRepositoryException;
 import org.trellisldp.spi.Session;
 import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.RDF;
 import org.trellisldp.vocabulary.Trellis;
 
@@ -90,8 +91,8 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
-        return auth -> auth.getAgent().contains(session.getAgent()) ||
-            agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
+        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent()) ||
+              agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {

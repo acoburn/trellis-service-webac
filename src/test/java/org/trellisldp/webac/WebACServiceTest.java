@@ -24,23 +24,23 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
+import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.RDF;
+import org.apache.commons.rdf.jena.JenaRDF;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.trellisldp.api.Resource;
 import org.trellisldp.spi.AccessControlService;
 import org.trellisldp.spi.AgentService;
 import org.trellisldp.spi.ResourceService;
 import org.trellisldp.spi.Session;
 import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.PROV;
 import org.trellisldp.vocabulary.Trellis;
-import org.apache.commons.rdf.api.IRI;
-import org.apache.commons.rdf.api.RDF;
-import org.apache.commons.rdf.jena.JenaRDF;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 /**
  * @author acoburn
@@ -156,7 +156,7 @@ public class WebACServiceTest {
         when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
         when(mockResourceService.get(eq(parentIRI))).thenReturn(of(mockParentResource));
         when(mockResourceService.get(eq(rootIRI))).thenReturn(of(mockRootResource));
-        when(mockResourceService.getContainer(nonexistentIRI)).thenReturn(of(childIRI));
+        when(mockResourceService.getContainer(nonexistentIRI)).thenReturn(of(resourceIRI));
         when(mockResourceService.getContainer(resourceIRI)).thenReturn(of(childIRI));
         when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
         when(mockResourceService.getContainer(parentIRI)).thenReturn(of(rootIRI));
@@ -422,6 +422,57 @@ public class WebACServiceTest {
         assertTrue(testService.canWrite(mockSession, childIRI));
         assertTrue(testService.canWrite(mockSession, parentIRI));
         assertTrue(testService.canWrite(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testFoafAgent() {
+        when(mockSession.getAgent()).thenReturn(Trellis.AnonymousUser);
+        when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI1, type, ACL.Authorization),
+                rdf.createTriple(authIRI1, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI1, ACL.agentClass, FOAF.Agent),
+                rdf.createTriple(authIRI1, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI2, type, ACL.Authorization),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI2, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI2, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI2, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI3, type, ACL.Authorization),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI3, ACL.agentClass, FOAF.Agent),
+                rdf.createTriple(authIRI3, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI4, ACL.agent, agentIRI),
+                rdf.createTriple(authIRI4, type, ACL.Authorization)));
+
+        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
+        assertTrue(testService.canWrite(mockSession, resourceIRI));
+        assertTrue(testService.canWrite(mockSession, childIRI));
+        assertFalse(testService.canWrite(mockSession, parentIRI));
+        assertFalse(testService.canWrite(mockSession, rootIRI));
+
+        assertTrue(testService.canRead(mockSession, nonexistentIRI));
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertFalse(testService.canRead(mockSession, parentIRI));
+        assertFalse(testService.canRead(mockSession, rootIRI));
+
+        assertFalse(testService.canControl(mockSession, nonexistentIRI));
+        assertFalse(testService.canControl(mockSession, resourceIRI));
+        assertFalse(testService.canControl(mockSession, childIRI));
+        assertFalse(testService.canControl(mockSession, parentIRI));
+        assertFalse(testService.canControl(mockSession, rootIRI));
+
+        assertFalse(testService.canAppend(mockSession, nonexistentIRI));
+        assertFalse(testService.canAppend(mockSession, resourceIRI));
+        assertFalse(testService.canAppend(mockSession, childIRI));
+        assertFalse(testService.canAppend(mockSession, parentIRI));
+        assertFalse(testService.canAppend(mockSession, rootIRI));
     }
 
     @Test
