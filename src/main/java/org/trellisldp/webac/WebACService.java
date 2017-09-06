@@ -76,7 +76,7 @@ public class WebACService implements AccessControlService {
 
         return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
                 .filter(delegateFilter(session).negate())
-                .filter(agentGroupFilter(session, getGroups(session.getAgent()))))
+                .filter(agentFilter(session)))
             .orElseGet(Stream::empty)
             .peek(auth -> LOGGER.debug("Applying Authorization {} to {}", auth.getIdentifier(), identifier))
             .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
@@ -90,17 +90,12 @@ public class WebACService implements AccessControlService {
         return resourceService.getContainer(identifier).flatMap(this::getNearestResource);
     }
 
-    private Predicate<Authorization> agentGroupFilter(final Session session, final List<IRI> agentGroups) {
-        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent()) ||
-              agentGroups.stream().anyMatch(auth.getAgentGroup()::contains);
+    private Predicate<Authorization> agentFilter(final Session session) {
+        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent());
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {
         return auth -> session.getDelegatedBy().filter(delegate -> !auth.getAgent().contains(delegate)).isPresent();
-    }
-
-    private List<IRI> getGroups(final IRI agent) {
-        return agentService.getGroups(agent).collect(toList());
     }
 
     private Predicate<Authorization> getInheritedAuth(final IRI identifier) {
