@@ -91,7 +91,8 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<Authorization> agentFilter(final Session session) {
-        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent());
+        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent()) ||
+            auth.getAgentGroup().stream().anyMatch(group -> agentService.isAgentInGroup(session.getAgent(), group));
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {
