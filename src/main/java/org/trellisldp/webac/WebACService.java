@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 
@@ -40,6 +41,7 @@ import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.RDF;
 import org.trellisldp.vocabulary.Trellis;
+import org.trellisldp.vocabulary.VCARD;
 
 /**
  *
@@ -108,8 +110,13 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<IRI> isAgentInGroup(final IRI agent) {
-        // TODO - implement this
-        return group -> false;
+        return group -> resourceService.get(group).filter(res -> {
+            try (final Stream<RDFTerm> triples = res.stream(Trellis.PreferUserManaged)
+                    .filter(t -> t.getSubject().equals(group) && t.getPredicate().equals(VCARD.hasMember))
+                    .map(Triple::getObject)) {
+                return triples.anyMatch(agent::equals);
+            }
+        }).isPresent();
     }
 
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {

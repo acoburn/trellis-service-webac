@@ -28,7 +28,6 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -42,6 +41,7 @@ import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.FOAF;
 import org.trellisldp.vocabulary.PROV;
 import org.trellisldp.vocabulary.Trellis;
+import org.trellisldp.vocabulary.VCARD;
 
 /**
  * @author acoburn
@@ -64,7 +64,7 @@ public class WebACServiceTest {
     private Resource mockResource, mockChildResource, mockParentResource, mockRootResource,
                 mockPrivateAclResource, mockPublicAclResource, mockAuthResource1,
                 mockAuthResource2, mockAuthResource3, mockAuthResource4, mockAuthResource5,
-                mockAuthResource6, mockAuthResource7, mockAuthResource8;
+                mockAuthResource6, mockAuthResource7, mockAuthResource8, mockGroupResource;
 
     private AccessControlService testService;
 
@@ -100,7 +100,7 @@ public class WebACServiceTest {
 
     private final static IRI agentIRI = rdf.createIRI("info:user/agent");
 
-    private final static IRI groupIRI = rdf.createIRI("info:group/test");
+    private final static IRI groupIRI = rdf.createIRI("trellis:repository/group/test");
 
     @Before
     public void setUp() {
@@ -157,6 +157,7 @@ public class WebACServiceTest {
         when(mockResourceService.get(eq(childIRI))).thenReturn(of(mockChildResource));
         when(mockResourceService.get(eq(parentIRI))).thenReturn(of(mockParentResource));
         when(mockResourceService.get(eq(rootIRI))).thenReturn(of(mockRootResource));
+        when(mockResourceService.get(eq(groupIRI))).thenReturn(of(mockGroupResource));
         when(mockResourceService.getContainer(nonexistentIRI)).thenReturn(of(resourceIRI));
         when(mockResourceService.getContainer(resourceIRI)).thenReturn(of(childIRI));
         when(mockResourceService.getContainer(childIRI)).thenReturn(of(parentIRI));
@@ -511,10 +512,15 @@ public class WebACServiceTest {
         assertTrue(testService.canWrite(mockSession, rootIRI));
     }
 
-    @Ignore
     @Test
     public void testGroup() {
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        when(mockGroupResource.stream(eq(Trellis.PreferUserManaged))).thenAnswer(inv -> Stream.of(
+                    rdf.createTriple(authIRI1, VCARD.hasMember, acoburnIRI),
+                    rdf.createTriple(groupIRI, VCARD.hasMember, bseegerIRI),
+                    rdf.createTriple(groupIRI, type, VCARD.Group),
+                    rdf.createTriple(groupIRI, VCARD.hasMember, acoburnIRI)));
+
         when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
                 rdf.createTriple(authIRI2, type, ACL.Authorization),
                 rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
