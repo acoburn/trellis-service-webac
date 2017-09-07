@@ -92,7 +92,7 @@ public class WebACService implements AccessControlService {
 
     private Predicate<Authorization> agentFilter(final Session session) {
         return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent()) ||
-            auth.getAgentGroup().stream().anyMatch(group -> agentService.isAgentInGroup(session.getAgent(), group));
+            auth.getAgentGroup().stream().anyMatch(isAgentInGroup(session.getAgent()));
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {
@@ -105,6 +105,11 @@ public class WebACService implements AccessControlService {
 
     private Predicate<Authorization> getAccessToAuth(final IRI identifier) {
         return auth -> auth.getAccessTo().contains(identifier);
+    }
+
+    private Predicate<IRI> isAgentInGroup(final IRI agent) {
+        // TODO - implement this
+        return group -> false;
     }
 
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
