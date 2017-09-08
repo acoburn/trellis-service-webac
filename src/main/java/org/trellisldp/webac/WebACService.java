@@ -17,6 +17,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.trellisldp.spi.RDFUtils.cleanIdentifier;
 import static org.trellisldp.spi.RDFUtils.getInstance;
 
 import java.util.List;
@@ -110,7 +111,7 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<IRI> isAgentInGroup(final IRI agent) {
-        return group -> resourceService.get(group).filter(res -> {
+        return group -> resourceService.get(cleanIdentifier(group)).filter(res -> {
             try (final Stream<RDFTerm> triples = res.stream(Trellis.PreferUserManaged)
                     .filter(t -> t.getSubject().equals(group) && t.getPredicate().equals(VCARD.hasMember))
                     .map(Triple::getObject)) {
