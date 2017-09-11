@@ -73,7 +73,7 @@ public class WebACService implements AccessControlService {
         requireNonNull(session, "A non-null session must be provided!");
         requireNonNull(predicate, "A non-null predicate must be provided!");
 
-        if (Trellis.RepositoryAdministrator.equals(session.getAgent()) || agentService.isAdmin(session.getAgent())) {
+        if (Trellis.RepositoryAdministrator.equals(session.getAgent())) {
             return true;
         }
 

@@ -18,7 +18,6 @@ import static java.util.Optional.of;
 import static org.trellisldp.vocabulary.RDF.type;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -170,8 +169,6 @@ public class WebACServiceTest {
         when(mockResource.hasAcl()).thenReturn(false);
         when(mockParentResource.hasAcl()).thenReturn(false);
 
-        when(mockAgentService.isAdmin(any(IRI.class))).thenReturn(false);
-
         when(mockSession.getAgent()).thenReturn(agentIRI);
         when(mockSession.getDelegatedBy()).thenReturn(empty());
     }
@@ -299,33 +296,6 @@ public class WebACServiceTest {
     @Test
     public void testAdmin1() {
         when(mockSession.getAgent()).thenReturn(Trellis.RepositoryAdministrator);
-        assertTrue(testService.canAppend(mockSession, nonexistentIRI));
-        assertTrue(testService.canAppend(mockSession, resourceIRI));
-        assertTrue(testService.canAppend(mockSession, childIRI));
-        assertTrue(testService.canAppend(mockSession, parentIRI));
-        assertTrue(testService.canAppend(mockSession, rootIRI));
-        assertTrue(testService.canControl(mockSession, nonexistentIRI));
-        assertTrue(testService.canControl(mockSession, resourceIRI));
-        assertTrue(testService.canControl(mockSession, childIRI));
-        assertTrue(testService.canControl(mockSession, parentIRI));
-        assertTrue(testService.canControl(mockSession, rootIRI));
-        assertTrue(testService.canWrite(mockSession, nonexistentIRI));
-        assertTrue(testService.canWrite(mockSession, resourceIRI));
-        assertTrue(testService.canWrite(mockSession, childIRI));
-        assertTrue(testService.canWrite(mockSession, parentIRI));
-        assertTrue(testService.canWrite(mockSession, rootIRI));
-        assertTrue(testService.canRead(mockSession, nonexistentIRI));
-        assertTrue(testService.canRead(mockSession, resourceIRI));
-        assertTrue(testService.canRead(mockSession, childIRI));
-        assertTrue(testService.canRead(mockSession, parentIRI));
-        assertTrue(testService.canRead(mockSession, rootIRI));
-    }
-
-    @Test
-    public void testAdmin2() {
-        when(mockSession.getAgent()).thenReturn(agentIRI);
-        when(mockAgentService.isAdmin(eq(agentIRI))).thenReturn(true);
-
         assertTrue(testService.canAppend(mockSession, nonexistentIRI));
         assertTrue(testService.canAppend(mockSession, resourceIRI));
         assertTrue(testService.canAppend(mockSession, childIRI));
