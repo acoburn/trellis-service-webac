@@ -255,4 +255,5 @@ task docs(type: Javadoc) {
 }
 
 checkstyleMain.dependsOn processBuildTools
+afterReleaseBuild.dependsOn uploadArchives
 afterReleaseBuild.dependsOn docs
