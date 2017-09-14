@@ -87,6 +87,7 @@ public class WebACService implements AccessControlService {
 
     private Optional<Resource> getNearestResource(final IRI identifier) {
         final Optional<Resource> res = resourceService.get(identifier);
+        // TODO -- JDK9 refactor with Optional::or
         if (res.isPresent()) {
             return res;
         }
