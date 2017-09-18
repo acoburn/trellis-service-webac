@@ -33,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.trellisldp.api.Resource;
 import org.trellisldp.spi.AccessControlService;
-import org.trellisldp.spi.AgentService;
 import org.trellisldp.spi.ResourceService;
 import org.trellisldp.spi.Session;
 import org.trellisldp.vocabulary.ACL;
@@ -52,9 +51,6 @@ public class WebACServiceTest {
 
     @Mock
     private ResourceService mockResourceService;
-
-    @Mock
-    private AgentService mockAgentService;
 
     @Mock
     private Session mockSession;
@@ -104,7 +100,7 @@ public class WebACServiceTest {
     @Before
     public void setUp() {
 
-        testService = new WebACService(mockResourceService, mockAgentService);
+        testService = new WebACService(mockResourceService);
 
         when(mockChildResource.hasAcl()).thenReturn(true);
         when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(

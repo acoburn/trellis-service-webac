@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 
 import org.trellisldp.api.Resource;
 import org.trellisldp.spi.AccessControlService;
-import org.trellisldp.spi.AgentService;
 import org.trellisldp.spi.Authorization;
 import org.trellisldp.spi.ResourceService;
 import org.trellisldp.spi.RuntimeRepositoryException;
@@ -54,18 +53,13 @@ public class WebACService implements AccessControlService {
 
     private final ResourceService resourceService;
 
-    private final AgentService agentService;
-
     /**
      * Create a WebAC-base authorization service
      * @param resourceService the resource service
-     * @param agentService the agent service
      */
-    public WebACService(final ResourceService resourceService, final AgentService agentService) {
+    public WebACService(final ResourceService resourceService) {
         requireNonNull(resourceService, "A non-null ResourceService must be provided!");
-        requireNonNull(agentService, "A non-null AgentService must be provided!");
         this.resourceService = resourceService;
-        this.agentService = agentService;
     }
 
     @Override
