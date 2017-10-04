@@ -17,8 +17,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.trellisldp.spi.RDFUtils.cleanIdentifier;
-import static org.trellisldp.spi.RDFUtils.getInstance;
+import static org.trellisldp.api.RDFUtils.getInstance;
+import static org.trellisldp.vocabulary.RDF.type;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,19 +27,19 @@ import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
+import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 
+import org.trellisldp.api.AccessControlService;
+import org.trellisldp.api.Authorization;
 import org.trellisldp.api.Resource;
-import org.trellisldp.spi.AccessControlService;
-import org.trellisldp.spi.Authorization;
-import org.trellisldp.spi.ResourceService;
-import org.trellisldp.spi.RuntimeRepositoryException;
-import org.trellisldp.spi.Session;
+import org.trellisldp.api.ResourceService;
+import org.trellisldp.api.RuntimeRepositoryException;
+import org.trellisldp.api.Session;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.FOAF;
-import org.trellisldp.vocabulary.RDF;
 import org.trellisldp.vocabulary.Trellis;
 import org.trellisldp.vocabulary.VCARD;
 
@@ -50,6 +50,8 @@ import org.trellisldp.vocabulary.VCARD;
 public class WebACService implements AccessControlService {
 
     private static final Logger LOGGER = getLogger(WebACService.class);
+
+    private static final RDF rdf = getInstance();
 
     private final ResourceService resourceService;
 
@@ -116,8 +118,8 @@ public class WebACService implements AccessControlService {
     }
 
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
-        return graph.stream(null, RDF.type, ACL.Authorization).map(Triple::getSubject).distinct().map(subject -> {
-                try (final Graph authGraph = getInstance().createGraph()) {
+        return graph.stream(null, type, ACL.Authorization).map(Triple::getSubject).distinct().map(subject -> {
+                try (final Graph authGraph = rdf.createGraph()) {
                     graph.stream(subject, null, null).forEach(authGraph::add);
                     return Authorization.from(subject, authGraph);
                 } catch (final Exception ex) {
@@ -130,7 +132,7 @@ public class WebACService implements AccessControlService {
         LOGGER.debug("Checking ACL for: {}", resource.getIdentifier());
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
         if (resource.hasAcl()) {
-            try (final Graph graph = getInstance().createGraph()) {
+            try (final Graph graph = rdf.createGraph()) {
                 resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
 
                 final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
@@ -147,5 +149,27 @@ public class WebACService implements AccessControlService {
         LOGGER.debug("No ACL for {}; looking up parent resource", resource.getIdentifier());
         return parent.flatMap(resourceService::get).map(res -> getAllAuthorizationsFor(res, false))
             .orElseGet(Stream::empty);
+    }
+
+    /**
+     * Clean the identifier
+     * @param identifier the identifier
+     * @return the cleaned identifier
+     */
+    private static String cleanIdentifier(final String identifier) {
+        final String id = identifier.split("#")[0].split("\\?")[0];
+        if (id.endsWith("/")) {
+            return id.substring(0, id.length() - 1);
+        }
+        return id;
+    }
+
+    /**
+     * Clean the identifier
+     * @param identifier the identifier
+     * @return the cleaned identifier
+     */
+    private static IRI cleanIdentifier(final IRI identifier) {
+        return rdf.createIRI(cleanIdentifier(identifier.getIRIString()));
     }
 }
