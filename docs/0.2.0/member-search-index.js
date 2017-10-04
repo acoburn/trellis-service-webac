@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"org.trellisldp.webac","c":"WebACService","l":"anyMatch(Session, IRI, Predicate<IRI>)","url":"anyMatch-org.trellisldp.api.Session-org.apache.commons.rdf.api.IRI-java.util.function.Predicate-"},{"p":"org.trellisldp.webac","c":"WebACService","l":"WebACService(ResourceService)","url":"WebACService-org.trellisldp.api.ResourceService-"}]
