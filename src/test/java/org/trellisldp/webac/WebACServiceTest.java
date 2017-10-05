@@ -97,6 +97,8 @@ public class WebACServiceTest {
 
     private final static IRI groupIRI = rdf.createIRI("trellis:repository/group/test");
 
+    private final static IRI groupIRI2 = rdf.createIRI("trellis:repository/group/test/");
+
     @Before
     public void setUp() {
 
@@ -514,6 +516,52 @@ public class WebACServiceTest {
 
                 rdf.createTriple(authIRI8, type, ACL.Authorization),
                 rdf.createTriple(authIRI8, ACL.agentGroup, groupIRI),
+                rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
+
+        assertTrue(testService.canRead(mockSession, resourceIRI));
+        assertTrue(testService.canRead(mockSession, childIRI));
+        assertTrue(testService.canRead(mockSession, parentIRI));
+        assertTrue(testService.canRead(mockSession, rootIRI));
+    }
+
+    @Test
+    public void testGroup2() {
+        when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        when(mockGroupResource.stream(eq(Trellis.PreferUserManaged))).thenAnswer(inv -> Stream.of(
+                    rdf.createTriple(authIRI1, VCARD.hasMember, acoburnIRI),
+                    rdf.createTriple(groupIRI2, VCARD.hasMember, bseegerIRI),
+                    rdf.createTriple(groupIRI2, type, VCARD.Group),
+                    rdf.createTriple(groupIRI2, VCARD.hasMember, acoburnIRI)));
+
+        when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI2, type, ACL.Authorization),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI2, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI2, ACL.agentGroup, groupIRI2),
+                rdf.createTriple(authIRI2, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI3, type, PROV.Activity),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Write),
+                rdf.createTriple(authIRI3, ACL.mode, ACL.Control),
+                rdf.createTriple(authIRI3, ACL.agentGroup, groupIRI2),
+                rdf.createTriple(authIRI3, ACL.accessTo, childIRI),
+
+                rdf.createTriple(authIRI4, ACL.agentGroup, groupIRI2),
+                rdf.createTriple(authIRI4, type, ACL.Authorization)));
+
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, type, ACL.Authorization),
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
+
+                rdf.createTriple(authIRI8, type, ACL.Authorization),
+                rdf.createTriple(authIRI8, ACL.agentGroup, groupIRI2),
                 rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
                 rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
                 rdf.createTriple(authIRI8, ACL.mode, ACL.Write)));
