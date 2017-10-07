@@ -42,6 +42,8 @@ ext {
     jacocoVersion = "0.7.9"
 
     /* OSGi */
+    trellisApiVersionRange = '[0.3,1)'
+    trellisVocabularyVersionRange = '[0.1,1)'
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
 }
 
@@ -54,7 +56,6 @@ dependencies {
     api group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
 
     implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    implementation group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
     implementation group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
 
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
