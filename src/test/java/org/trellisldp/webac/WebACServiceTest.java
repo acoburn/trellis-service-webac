@@ -16,21 +16,22 @@ package org.trellisldp.webac;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.trellisldp.vocabulary.RDF.type;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.commons.rdf.jena.JenaRDF;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.trellisldp.api.AccessControlService;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.ResourceService;
@@ -44,7 +45,7 @@ import org.trellisldp.vocabulary.VCARD;
 /**
  * @author acoburn
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(JUnitPlatform.class)
 public class WebACServiceTest {
 
     private static final RDF rdf = new JenaRDF();
@@ -99,8 +100,9 @@ public class WebACServiceTest {
 
     private final static IRI groupIRI2 = rdf.createIRI("trellis:repository/group/test/");
 
-    @Before
+    @BeforeEach
     public void setUp() {
+        initMocks(this);
 
         testService = new WebACService(mockResourceService);
 
