@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.api.RDFUtils.getInstance;
-import static org.trellisldp.vocabulary.RDF.type;
 
 import java.util.HashSet;
 import java.util.List;
@@ -130,10 +129,10 @@ public class WebACService implements AccessControlService {
     }
 
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
-        return graph.stream(null, type, ACL.Authorization).map(Triple::getSubject).distinct().map(subject -> {
-                try (final Graph authGraph = rdf.createGraph()) {
-                    graph.stream(subject, null, null).forEach(authGraph::add);
-                    return Authorization.from(subject, authGraph);
+        return graph.stream().map(Triple::getSubject).distinct().map(subject -> {
+                try (final Graph subGraph = rdf.createGraph()) {
+                    graph.stream(subject, null, null).forEach(subGraph::add);
+                    return Authorization.from(subject, subGraph);
                 } catch (final Exception ex) {
                     throw new RuntimeRepositoryException("Error Processing graph", ex);
                 }

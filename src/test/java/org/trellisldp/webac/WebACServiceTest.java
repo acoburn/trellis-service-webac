@@ -113,7 +113,6 @@ public class WebACServiceTest {
                 rdf.createTriple(authIRI1, ACL.agent, bseegerIRI),
                 rdf.createTriple(authIRI1, ACL.accessTo, childIRI),
 
-                rdf.createTriple(authIRI2, type, ACL.Authorization),
                 rdf.createTriple(authIRI2, ACL.mode, ACL.Read),
                 rdf.createTriple(authIRI2, ACL.mode, ACL.Write),
                 rdf.createTriple(authIRI2, ACL.mode, ACL.Control),
@@ -134,7 +133,6 @@ public class WebACServiceTest {
 
         when(mockRootResource.hasAcl()).thenReturn(true);
         when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI5, type, ACL.Authorization),
                 rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
                 rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
                 rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
@@ -510,13 +508,11 @@ public class WebACServiceTest {
                 rdf.createTriple(authIRI4, type, ACL.Authorization)));
 
         when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
-                rdf.createTriple(authIRI5, type, ACL.Authorization),
                 rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
                 rdf.createTriple(authIRI5, ACL.agent, bseegerIRI),
                 rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
                 rdf.createTriple(authIRI5, ACL.mode, ACL.Append),
 
-                rdf.createTriple(authIRI8, type, ACL.Authorization),
                 rdf.createTriple(authIRI8, ACL.agentGroup, groupIRI),
                 rdf.createTriple(authIRI8, ACL.accessTo, rootIRI),
                 rdf.createTriple(authIRI8, ACL.mode, ACL.Read),
