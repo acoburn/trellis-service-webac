@@ -13,15 +13,19 @@
  */
 package org.trellisldp.webac;
 
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.api.RDFUtils.getInstance;
 import static org.trellisldp.vocabulary.RDF.type;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -33,7 +37,6 @@ import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.AccessControlService;
-import org.trellisldp.api.Authorization;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.ResourceService;
 import org.trellisldp.api.RuntimeRepositoryException;
@@ -53,6 +56,15 @@ public class WebACService implements AccessControlService {
 
     private static final RDF rdf = getInstance();
 
+    private static final Set<IRI> allModes = new HashSet<>();
+
+    static {
+        allModes.add(ACL.Read);
+        allModes.add(ACL.Write);
+        allModes.add(ACL.Control);
+        allModes.add(ACL.Append);
+    }
+
     private final ResourceService resourceService;
 
     /**
@@ -65,12 +77,11 @@ public class WebACService implements AccessControlService {
     }
 
     @Override
-    public Boolean anyMatch(final Session session, final IRI identifier, final Predicate<IRI> predicate) {
+    public Set<IRI> getAccessModes(final IRI identifier, final Session session) {
         requireNonNull(session, "A non-null session must be provided!");
-        requireNonNull(predicate, "A non-null predicate must be provided!");
 
         if (Trellis.RepositoryAdministrator.equals(session.getAgent())) {
-            return true;
+            return unmodifiableSet(allModes);
         }
 
         return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
@@ -78,7 +89,8 @@ public class WebACService implements AccessControlService {
                 .filter(agentFilter(session)))
             .orElseGet(Stream::empty)
             .peek(auth -> LOGGER.debug("Applying Authorization {} to {}", auth.getIdentifier(), identifier))
-            .anyMatch(auth -> auth.getMode().stream().anyMatch(predicate));
+            .flatMap(auth -> auth.getMode().stream())
+            .collect(toSet());
     }
 
     private Optional<Resource> getNearestResource(final IRI identifier) {

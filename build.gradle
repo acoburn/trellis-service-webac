@@ -30,8 +30,8 @@ ext {
     license = 'Apache 2'
 
     /* Dependencies */
-    trellisApiVersion = '0.3.0'
-    trellisVocabularyVersion = '0.1.0'
+    trellisApiVersion = '0.4.0-SNAPSHOT'
+    trellisVocabularyVersion = '0.2.0-SNAPSHOT'
     commonsRdfVersion = '0.3.0-incubating'
     slf4jVersion = '1.7.25'
 
@@ -44,8 +44,8 @@ ext {
     jacocoVersion = "0.7.9"
 
     /* OSGi */
-    trellisApiVersionRange = '[0.3,1)'
-    trellisVocabularyVersionRange = '[0.1,1)'
+    trellisApiVersionRange = '[0.4,1)'
+    trellisVocabularyVersionRange = '[0.2,1)'
     projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
 }
 
@@ -74,6 +74,9 @@ repositories {
     jcenter()
     mavenCentral()
     mavenLocal()
+	maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 gradle.projectsEvaluated {
