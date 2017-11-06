@@ -74,6 +74,7 @@ repositories {
     jcenter()
     mavenCentral()
     mavenLocal()
+    // TODO remove this when appropriate
 	maven {
         url "https://oss.sonatype.org/content/repositories/snapshots"
     }
