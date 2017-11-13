@@ -142,8 +142,9 @@ public class WebACService implements AccessControlService {
     }
 
     private Predicate<Authorization> agentFilter(final IRI agent) {
-        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(agent) ||
-            auth.getAgentGroup().stream().anyMatch(isAgentInGroup(agent));
+        return auth -> auth.getAgentClass().contains(FOAF.Agent) ||
+            (auth.getAgentClass().contains(ACL.AuthenticatedAgent) && !Trellis.AnonymousUser.equals(agent)) ||
+            auth.getAgent().contains(agent) || auth.getAgentGroup().stream().anyMatch(isAgentInGroup(agent));
     }
 
     private Predicate<Authorization> getInheritedAuth(final IRI identifier) {
