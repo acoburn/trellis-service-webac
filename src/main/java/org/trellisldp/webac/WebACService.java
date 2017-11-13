@@ -131,7 +131,7 @@ public class WebACService implements AccessControlService {
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
         return graph.stream().map(Triple::getSubject).distinct().map(subject -> {
                 try (final Graph subGraph = rdf.createGraph()) {
-                    graph.stream(subject, null, null).forEach(subGraph::add);
+                    graph.stream(subject, null, null).forEachOrdered(subGraph::add);
                     return Authorization.from(subject, subGraph);
                 } catch (final Exception ex) {
                     throw new RuntimeRepositoryException("Error Processing graph", ex);
@@ -144,7 +144,7 @@ public class WebACService implements AccessControlService {
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
         if (resource.hasAcl()) {
             try (final Graph graph = rdf.createGraph()) {
-                resource.stream(Trellis.PreferAccessControl).forEach(graph::add);
+                resource.stream(Trellis.PreferAccessControl).forEachOrdered(graph::add);
 
                 final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
 

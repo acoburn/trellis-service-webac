@@ -76,7 +76,7 @@ public class Authorization {
 
         graph.stream(identifier, null, null).filter(triple -> dataMap.containsKey(triple.getPredicate()))
             .filter(triple -> triple.getObject() instanceof IRI)
-            .forEach(triple -> dataMap.get(triple.getPredicate()).add((IRI) triple.getObject()));
+            .forEachOrdered(triple -> dataMap.get(triple.getPredicate()).add((IRI) triple.getObject()));
     }
 
     /**
