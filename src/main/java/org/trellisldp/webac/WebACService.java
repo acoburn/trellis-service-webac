@@ -103,10 +103,10 @@ public class WebACService implements AccessControlService {
             try {
                 final Set<IRI> cachedModes = cache.get(getCacheKey(identifier, session.getAgent()), () ->
                         getAuthz(identifier, session.getAgent()));
-                if (session.getDelegatedBy().isPresent()) {
-                    final IRI delegate = session.getDelegatedBy().get();
-                    cachedModes.retainAll(cache.get(getCacheKey(identifier, delegate), () ->
-                                getAuthz(identifier, delegate)));
+                final Optional<IRI> delegate = session.getDelegatedBy();
+                if (delegate.isPresent()) {
+                    cachedModes.retainAll(cache.get(getCacheKey(identifier, delegate.get()), () ->
+                                getAuthz(identifier, delegate.get())));
                 }
                 return cachedModes;
             } catch (final ExecutionException ex) {
@@ -144,10 +144,6 @@ public class WebACService implements AccessControlService {
     private Predicate<Authorization> agentFilter(final IRI agent) {
         return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(agent) ||
             auth.getAgentGroup().stream().anyMatch(isAgentInGroup(agent));
-    }
-
-    private Predicate<Authorization> delegateFilter(final Session session) {
-        return auth -> session.getDelegatedBy().filter(delegate -> !auth.getAgent().contains(delegate)).isPresent();
     }
 
     private Predicate<Authorization> getInheritedAuth(final IRI identifier) {
