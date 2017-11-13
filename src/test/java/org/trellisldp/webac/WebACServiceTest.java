@@ -366,8 +366,8 @@ public class WebACServiceTest {
 
         assertTrue(testService.getAccessModes(resourceIRI, mockSession).contains(ACL.Read));
         assertTrue(testService.getAccessModes(childIRI, mockSession).contains(ACL.Read));
-        assertFalse(testService.getAccessModes(parentIRI, mockSession).contains(ACL.Read));
-        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
+        assertTrue(testService.getAccessModes(parentIRI, mockSession).contains(ACL.Read));
+        assertTrue(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
     }
 
     @Test

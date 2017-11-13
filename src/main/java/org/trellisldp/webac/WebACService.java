@@ -101,23 +101,31 @@ public class WebACService implements AccessControlService {
 
         if (nonNull(cache)) {
             try {
-                return cache.get(getCacheKey(identifier, session), () -> getAuthz(identifier, session));
+                final Set<IRI> cachedModes = cache.get(getCacheKey(identifier, session.getAgent()), () ->
+                        getAuthz(identifier, session.getAgent()));
+                if (session.getDelegatedBy().isPresent()) {
+                    final IRI delegate = session.getDelegatedBy().get();
+                    cachedModes.retainAll(cache.get(getCacheKey(identifier, delegate), () ->
+                                getAuthz(identifier, delegate)));
+                }
+                return cachedModes;
             } catch (final ExecutionException ex) {
                 LOGGER.warn("Error fetching AuthZ data from cache: {}", ex.getMessage());
             }
         }
-        return getAuthz(identifier, session);
+
+        final Set<IRI> modes = getAuthz(identifier, session.getAgent());
+        session.getDelegatedBy().ifPresent(delegate -> modes.retainAll(getAuthz(identifier, delegate)));
+        return modes;
     }
 
-    private String getCacheKey(final IRI identifier, final Session session) {
-        return join("||", identifier.getIRIString(), session.getAgent().getIRIString(),
-                session.getDelegatedBy().map(IRI::getIRIString).orElse(""));
+    private String getCacheKey(final IRI identifier, final IRI agent) {
+        return join("||", identifier.getIRIString(), agent.getIRIString());
     }
 
-    private Set<IRI> getAuthz(final IRI identifier, final Session session) {
+    private Set<IRI> getAuthz(final IRI identifier, final IRI agent) {
         return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
-                .filter(delegateFilter(session).negate())
-                .filter(agentFilter(session)))
+                .filter(agentFilter(agent)))
             .orElseGet(Stream::empty)
             .peek(auth -> LOGGER.debug("Applying Authorization {} to {}", auth.getIdentifier(), identifier))
             .flatMap(auth -> auth.getMode().stream())
@@ -133,9 +141,9 @@ public class WebACService implements AccessControlService {
         return resourceService.getContainer(identifier).flatMap(this::getNearestResource);
     }
 
-    private Predicate<Authorization> agentFilter(final Session session) {
-        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(session.getAgent()) ||
-            auth.getAgentGroup().stream().anyMatch(isAgentInGroup(session.getAgent()));
+    private Predicate<Authorization> agentFilter(final IRI agent) {
+        return auth -> auth.getAgentClass().contains(FOAF.Agent) || auth.getAgent().contains(agent) ||
+            auth.getAgentGroup().stream().anyMatch(isAgentInGroup(agent));
     }
 
     private Predicate<Authorization> delegateFilter(final Session session) {
