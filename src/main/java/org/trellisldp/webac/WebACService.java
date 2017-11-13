@@ -13,7 +13,9 @@
  */
 package org.trellisldp.webac;
 
+import static java.lang.String.join;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -21,10 +23,13 @@ import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.api.RDFUtils.getInstance;
 
+import com.google.common.cache.Cache;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -65,14 +70,25 @@ public class WebACService implements AccessControlService {
     }
 
     private final ResourceService resourceService;
+    private final Cache<String, Set<IRI>> cache;
 
     /**
-     * Create a WebAC-base authorization service
+     * Create a WebAC-based authorization service
      * @param resourceService the resource service
      */
     public WebACService(final ResourceService resourceService) {
+        this(resourceService, null);
+    }
+
+    /**
+     * Create a WebAC-based authorization service
+     * @param resourceService the resource service
+     * @param cache a guava cache (may be null if caching is not desired)
+     */
+    public WebACService(final ResourceService resourceService, final Cache<String, Set<IRI>> cache) {
         requireNonNull(resourceService, "A non-null ResourceService must be provided!");
         this.resourceService = resourceService;
+        this.cache = cache;
     }
 
     @Override
@@ -83,6 +99,22 @@ public class WebACService implements AccessControlService {
             return unmodifiableSet(allModes);
         }
 
+        if (nonNull(cache)) {
+            try {
+                return cache.get(getCacheKey(identifier, session), () -> getAuthz(identifier, session));
+            } catch (final ExecutionException ex) {
+                LOGGER.warn("Error fetching AuthZ data from cache: {}", ex.getMessage());
+            }
+        }
+        return getAuthz(identifier, session);
+    }
+
+    private String getCacheKey(final IRI identifier, final Session session) {
+        return join("||", identifier.getIRIString(), session.getAgent().getIRIString(),
+                session.getDelegatedBy().map(IRI::getIRIString).orElse(""));
+    }
+
+    private Set<IRI> getAuthz(final IRI identifier, final Session session) {
         return getNearestResource(identifier).map(resource -> getAllAuthorizationsFor(resource, true)
                 .filter(delegateFilter(session).negate())
                 .filter(agentFilter(session)))

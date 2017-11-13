@@ -33,6 +33,7 @@ ext {
     trellisApiVersion = '0.4.0-SNAPSHOT'
     trellisVocabularyVersion = '0.2.0-SNAPSHOT'
     commonsRdfVersion = '0.3.0-incubating'
+    guavaVersion = '23.0'
     slf4jVersion = '1.7.25'
 
     /* Testing */
@@ -54,6 +55,7 @@ configurations {
 }
 
 dependencies {
+    api group: 'com.google.guava', name: 'guava', version: guavaVersion
     api group: 'org.apache.commons', name: 'commons-rdf-api', version: commonsRdfVersion
     api group: 'org.trellisldp', name: 'trellis-api', version: trellisApiVersion
 

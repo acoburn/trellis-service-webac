@@ -13,6 +13,7 @@
  */
 package org.trellisldp.webac;
 
+import static com.google.common.cache.CacheBuilder.newBuilder;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.trellisldp.vocabulary.RDF.type;
@@ -22,6 +23,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.google.common.cache.Cache;
+
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
@@ -99,6 +103,8 @@ public class WebACServiceTest {
     private final static IRI groupIRI = rdf.createIRI("trellis:repository/group/test");
 
     private final static IRI groupIRI2 = rdf.createIRI("trellis:repository/group/test/");
+
+    private final static Cache<String, Set<IRI>> cache = newBuilder().build();
 
     @BeforeEach
     public void setUp() {
@@ -568,5 +574,39 @@ public class WebACServiceTest {
         assertTrue(testService.getAccessModes(childIRI, mockSession).contains(ACL.Read));
         assertTrue(testService.getAccessModes(parentIRI, mockSession).contains(ACL.Read));
         assertTrue(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
+    }
+
+
+    @Test
+    public void testCacheCanWrite1() {
+        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        when(mockSession.getAgent()).thenReturn(acoburnIRI);
+        assertFalse(testCacheService.getAccessModes(nonexistentIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
+    }
+
+    @Test
+    public void testCacheCanWrite2() {
+        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        when(mockSession.getAgent()).thenReturn(bseegerIRI);
+        assertTrue(testCacheService.getAccessModes(nonexistentIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Write));
+        assertFalse(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
+    }
+
+    @Test
+    public void testCacheCanWrite3() {
+        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        when(mockSession.getAgent()).thenReturn(agentIRI);
+        assertTrue(testCacheService.getAccessModes(nonexistentIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Write));
+        assertTrue(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
     }
 }
