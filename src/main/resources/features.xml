@@ -8,6 +8,7 @@
     <feature version="${trellisVocabularyVersionRange}">trellis-vocabulary</feature>
 
     <bundle dependency="true">mvn:org.apache.commons/commons-rdf-api/${commonsRdfVersion}</bundle>
+    <bundle dependency="true">mvn:com.google.guava/guava/${guavaVersion}</bundle>
 
     <bundle>mvn:org.trellisldp/trellis-webac/${project.version}</bundle>
   </feature>
