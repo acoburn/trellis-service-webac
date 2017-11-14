@@ -582,6 +582,35 @@ public class WebACServiceTest {
         assertTrue(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
     }
 
+    @Test
+    public void testAuthenticatedUser() {
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agentClass, ACL.AuthenticatedAgent),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append)));
+        when(mockSession.getAgent()).thenReturn(acoburnIRI);
+
+        assertTrue(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
+        assertTrue(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Append));
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Control));
+    }
+
+    @Test
+    public void testUnauthenticatedUser() {
+        when(mockRootResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
+                rdf.createTriple(authIRI5, ACL.accessTo, rootIRI),
+                rdf.createTriple(authIRI5, ACL.agentClass, ACL.AuthenticatedAgent),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Read),
+                rdf.createTriple(authIRI5, ACL.mode, ACL.Append)));
+        when(mockSession.getAgent()).thenReturn(Trellis.AnonymousUser);
+
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Append));
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
+        assertFalse(testService.getAccessModes(rootIRI, mockSession).contains(ACL.Control));
+    }
 
     @Test
     public void testCacheCanWrite1() {
