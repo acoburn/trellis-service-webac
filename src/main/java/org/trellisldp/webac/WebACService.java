@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.api.RDFUtils.getInstance;
+import static org.trellisldp.api.RDFUtils.toGraph;
 
 import java.util.HashSet;
 import java.util.List;
@@ -161,8 +162,7 @@ public class WebACService implements AccessControlService {
 
     private List<Authorization> getAuthorizationFromGraph(final Graph graph) {
         return graph.stream().map(Triple::getSubject).distinct().map(subject -> {
-                try (final Graph subGraph = rdf.createGraph()) {
-                    graph.stream(subject, null, null).forEachOrdered(subGraph::add);
+                try (final Graph subGraph = graph.stream(subject, null, null).collect(toGraph())) {
                     return Authorization.from(subject, subGraph);
                 } catch (final Exception ex) {
                     throw new RuntimeRepositoryException("Error Processing graph", ex);
@@ -174,9 +174,7 @@ public class WebACService implements AccessControlService {
         LOGGER.debug("Checking ACL for: {}", resource.getIdentifier());
         final Optional<IRI> parent = resourceService.getContainer(resource.getIdentifier());
         if (resource.hasAcl()) {
-            try (final Graph graph = rdf.createGraph()) {
-                resource.stream(Trellis.PreferAccessControl).forEachOrdered(graph::add);
-
+            try (final Graph graph = resource.stream(Trellis.PreferAccessControl).collect(toGraph())) {
                 final List<Authorization> authorizations = getAuthorizationFromGraph(graph);
 
                 if (!top && authorizations.stream().anyMatch(getInheritedAuth(resource.getIdentifier()))) {
