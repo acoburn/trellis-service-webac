@@ -23,13 +23,10 @@ import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.trellisldp.api.RDFUtils.getInstance;
 
-import com.google.common.cache.Cache;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -41,6 +38,7 @@ import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 
 import org.trellisldp.api.AccessControlService;
+import org.trellisldp.api.CacheService;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.ResourceService;
 import org.trellisldp.api.RuntimeRepositoryException;
@@ -70,7 +68,7 @@ public class WebACService implements AccessControlService {
     }
 
     private final ResourceService resourceService;
-    private final Cache<String, Set<IRI>> cache;
+    private final CacheService<String, Set<IRI>> cache;
 
     /**
      * Create a WebAC-based authorization service
@@ -83,9 +81,9 @@ public class WebACService implements AccessControlService {
     /**
      * Create a WebAC-based authorization service
      * @param resourceService the resource service
-     * @param cache a guava cache (may be null if caching is not desired)
+     * @param cache a cache (may be null if caching is not desired)
      */
-    public WebACService(final ResourceService resourceService, final Cache<String, Set<IRI>> cache) {
+    public WebACService(final ResourceService resourceService, final CacheService<String, Set<IRI>> cache) {
         requireNonNull(resourceService, "A non-null ResourceService must be provided!");
         this.resourceService = resourceService;
         this.cache = cache;
@@ -100,18 +98,14 @@ public class WebACService implements AccessControlService {
         }
 
         if (nonNull(cache)) {
-            try {
-                final Set<IRI> cachedModes = cache.get(getCacheKey(identifier, session.getAgent()), () ->
-                        getAuthz(identifier, session.getAgent()));
-                final Optional<IRI> delegate = session.getDelegatedBy();
-                if (delegate.isPresent()) {
-                    cachedModes.retainAll(cache.get(getCacheKey(identifier, delegate.get()), () ->
-                                getAuthz(identifier, delegate.get())));
-                }
-                return cachedModes;
-            } catch (final ExecutionException ex) {
-                LOGGER.warn("Error fetching AuthZ data from cache: {}", ex.getMessage());
+            final Set<IRI> cachedModes = cache.get(getCacheKey(identifier, session.getAgent()), k ->
+                    getAuthz(identifier, session.getAgent()));
+            final Optional<IRI> delegate = session.getDelegatedBy();
+            if (delegate.isPresent()) {
+                cachedModes.retainAll(cache.get(getCacheKey(identifier, delegate.get()), k ->
+                            getAuthz(identifier, delegate.get())));
             }
+            return cachedModes;
         }
 
         final Set<IRI> modes = getAuthz(identifier, session.getAgent());

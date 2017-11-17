@@ -13,7 +13,6 @@
  */
 package org.trellisldp.webac;
 
-import static com.google.common.cache.CacheBuilder.newBuilder;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.trellisldp.vocabulary.RDF.type;
@@ -25,10 +24,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.cache.Cache;
-
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.rdf.api.IRI;
@@ -40,6 +37,7 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.trellisldp.api.AccessControlService;
+import org.trellisldp.api.CacheService;
 import org.trellisldp.api.Resource;
 import org.trellisldp.api.ResourceService;
 import org.trellisldp.api.Session;
@@ -64,7 +62,7 @@ public class WebACServiceTest {
     private Session mockSession;
 
     @Mock
-    private Cache<String, Set<IRI>> mockCache;
+    private CacheService<String, Set<IRI>> mockCache;
 
     @Mock
     private Resource mockResource, mockChildResource, mockParentResource, mockRootResource,
@@ -110,13 +108,18 @@ public class WebACServiceTest {
 
     private final static IRI groupIRI2 = rdf.createIRI("trellis:repository/group/test/");
 
-    private final static Cache<String, Set<IRI>> cache = newBuilder().build();
-
     @BeforeEach
+    @SuppressWarnings("unchecked")
     public void setUp() {
         initMocks(this);
 
         testService = new WebACService(mockResourceService);
+
+        when(mockCache.get(anyString(), any(Function.class))).thenAnswer(inv -> {
+            final String key = (String) inv.getArgument(0);
+            final Function mapper = (Function<String, String>) inv.getArgument(1);
+            return mapper.apply(key);
+        });
 
         when(mockChildResource.hasAcl()).thenReturn(true);
         when(mockChildResource.stream(eq(Trellis.PreferAccessControl))).thenAnswer(inv -> Stream.of(
@@ -614,7 +617,7 @@ public class WebACServiceTest {
 
     @Test
     public void testCacheCanWrite1() {
-        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        final AccessControlService testCacheService = new WebACService(mockResourceService, mockCache);
         when(mockSession.getAgent()).thenReturn(acoburnIRI);
         assertFalse(testCacheService.getAccessModes(nonexistentIRI, mockSession).contains(ACL.Write));
         assertFalse(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
@@ -625,7 +628,7 @@ public class WebACServiceTest {
 
     @Test
     public void testCacheCanWrite2() {
-        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        final AccessControlService testCacheService = new WebACService(mockResourceService, mockCache);
         when(mockSession.getAgent()).thenReturn(bseegerIRI);
         assertTrue(testCacheService.getAccessModes(nonexistentIRI, mockSession).contains(ACL.Write));
         assertTrue(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
@@ -636,8 +639,7 @@ public class WebACServiceTest {
 
     @Test
     public void testCacheCanWrite3() {
-        final Cache<String, Set<IRI>> cache = newBuilder().build();
-        final AccessControlService testCacheService = new WebACService(mockResourceService, cache);
+        final AccessControlService testCacheService = new WebACService(mockResourceService, mockCache);
         when(mockSession.getAgent()).thenReturn(agentIRI);
         when(mockSession.getDelegatedBy()).thenReturn(of(bseegerIRI));
 
@@ -646,23 +648,5 @@ public class WebACServiceTest {
         assertTrue(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Write));
         assertFalse(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Write));
         assertFalse(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
-    }
-
-    @Test
-    public void testCacheError() throws Exception {
-        when(mockSession.getAgent()).thenReturn(agentIRI);
-        when(mockCache.get(anyString(), any())).thenThrow(new ExecutionException("Expected Error", new Exception()));
-
-        final AccessControlService testCacheService = new WebACService(mockResourceService, mockCache);
-
-        assertTrue(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Write));
-        assertTrue(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Write));
-        assertTrue(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Write));
-        assertTrue(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Write));
-
-        assertTrue(testCacheService.getAccessModes(resourceIRI, mockSession).contains(ACL.Read));
-        assertTrue(testCacheService.getAccessModes(childIRI, mockSession).contains(ACL.Read));
-        assertTrue(testCacheService.getAccessModes(parentIRI, mockSession).contains(ACL.Read));
-        assertTrue(testCacheService.getAccessModes(rootIRI, mockSession).contains(ACL.Read));
     }
 }
